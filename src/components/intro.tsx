@@ -84,7 +84,7 @@ const OUT_TOTAL_MS = OUT_CONTENT_MS + OUT_FLOOR_MS
  */
 const HARD_CAP_MS = 8000
 
-const REPO_URL = 'https://github.com/alicewe1/alice-assistant'
+const REPO_URL = 'https://github.com/Justinuse1/pojia-assistant'
 const TITLE = '欢迎使用POJIA.AI'
 
 export function Intro({ onDone }: { onDone: () => void }) {
