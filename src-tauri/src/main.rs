@@ -11,6 +11,7 @@ mod import_skill;
 mod ammo;
 mod board;
 mod probe;
+mod report;
 
 use tauri::Emitter;
 use tauri::Manager;
@@ -91,6 +92,8 @@ fn main() {
         .manage(cloud::CloudProxy::default())
         .invoke_handler(tauri::generate_handler![
         board::board_read,
+            report::report_scan,
+            report::report_generate,
             // 运行时 / 王炸codex
             runtime::engine_probe,
             runtime::runtime_root_path,

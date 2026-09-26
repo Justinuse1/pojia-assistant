@@ -1,5 +1,4 @@
-// Board 页 — 项目进度看板：agent 工况 + 版本路线 + 实时日志
-// 数据源: 项目根 board.json (agent 干活时热更新), 前端 5s 轮询
+// board.tsx 全量替换版 — 项目看板: agent 工况 + 版本路线 + 实时日志 + 战果摘要
 import { useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 
@@ -10,17 +9,21 @@ type Board = {
   roadmap: { ver: string; name: string; status: string }[]
   log: { time: string; who: string; what: string }[]
 }
+type ProbeReport = { file: string; time: string; variant: string; model: string; tiers: string; asr: string; pass_count: number; fail_count: number }
+type ReportData = { reports: ProbeReport[]; ammo_count: number; ammo_verified: number }
 
 const STATUS: Record<string, { label: string; color: string }> = {
-  running: { label: '🟢 干活中', color: 'var(--acc, #4ade80)' },
-  idle: { label: '⚪ 空闲', color: 'var(--mut, #888)' },
+  running: { label: '🟢 干活中', color: '#4ade80' },
+  idle: { label: '⚪ 空闲', color: '#888' },
   done: { label: '✅ 完成', color: '#4ade80' },
   blocked: { label: '⛔ 受阻', color: '#f87171' },
 }
 
 export function BoardPage() {
   const [board, setBoard] = useState<Board | null>(null)
+  const [rep, setRep] = useState<ReportData | null>(null)
   const [err, setErr] = useState('')
+  const [out, setOut] = useState('')
 
   const load = async () => {
     try {
@@ -34,6 +37,14 @@ export function BoardPage() {
     const t = setInterval(load, 5000)
     return () => clearInterval(t)
   }, [])
+
+  const genReport = async () => {
+    try {
+      const p = await invoke<string>('report_generate')
+      setOut(`已生成: ${p}`)
+    } catch (e) { setOut(`失败: ${e}`) }
+  }
+  useEffect(() => { invoke<ReportData>('report_scan').then(setRep).catch(() => {}) }, [])
 
   if (err) return <div className="page"><div className="muted">看板加载失败: {err}</div></div>
   if (!board) return <div className="page"><div className="muted">加载中…</div></div>
@@ -61,6 +72,27 @@ export function BoardPage() {
           </div>
         ))}
       </section>
+
+      {/* 战果摘要 */}
+      {rep && rep.reports.length > 0 && (
+        <section className="card" style={{ marginBottom: 12 }}>
+          <h2>战果摘要 <span className="muted" style={{ fontSize: 13 }}>弹药库 {rep.ammo_count} 条 ({rep.ammo_verified} 已验证)</span></h2>
+          {rep.reports.slice(0, 8).map(r => (
+            <div key={r.file} style={{ padding: '6px 0', fontSize: 13, display: 'flex', gap: 10, borderBottom: '1px solid rgba(128,128,128,.1)' }}>
+              <span className="muted" style={{ minWidth: 130 }}>{r.time}</span>
+              <b style={{ minWidth: 150 }}>{r.model}</b>
+              <span style={{ minWidth: 80 }}>{r.variant}</span>
+              <span className="muted" style={{ minWidth: 60 }}>{r.tiers}</span>
+              <span style={{ minWidth: 60, color: r.asr.includes('0%') ? '#f87171' : '#4ade80' }}>ASR {r.asr}</span>
+              <span className="muted">PASS {r.pass_count} / FAIL {r.fail_count}</span>
+            </div>
+          ))}
+          <div style={{ marginTop: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button className="btn btn-primary" onClick={genReport}>生成战报 → 桌面</button>
+            {out && <span className="muted" style={{ fontSize: 12 }}>{out}</span>}
+          </div>
+        </section>
+      )}
 
       {/* 版本路线 */}
       <section className="card" style={{ marginBottom: 12 }}>
