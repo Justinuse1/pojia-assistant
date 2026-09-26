@@ -14,6 +14,14 @@ for p in (root / ".env", Path.home() / ".hermes" / ".env"):
                 k, v = line.split("=", 1)
                 env[k.strip()] = v.strip()
 
+def _expand(v: str) -> str:
+    """展开 ${VAR} / $VAR 引用（.env 里常见 TG_BOT_TOKEN=${TELEGRAM_BOT_TOKEN} 这种间接）。"""
+    import re as _re
+    def _sub(m):
+        return env.get(m.group(1) or m.group(2), "")
+    return _re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)", _sub, v).strip()
+
+env = {k: _expand(v) for k, v in env.items()}
 token = env.get("TG_BOT_TOKEN") or env.get("TELEGRAM_BOT_TOKEN")
 chat = env.get("TG_PROJECT_CHAT_ID")
 if not token or not chat:

@@ -1,23 +1,101 @@
 {
   "project": "POJIA.AI 客户端",
   "version": "5.1.0",
-  "updated": "2026-09-26T14:30:00+08:00",
+  "updated": "2026-09-26T15:05:00+08:00",
   "agents": [
-    {"name": "port-agent", "role": "移植工：1:1复刻上游功能", "status": "idle", "task": "-", "progress": 0, "updated": "2026-09-26T14:30:00+08:00"},
-    {"name": "fuse-agent", "role": "融合工：叠加我方成果", "status": "idle", "task": "-", "progress": 0, "updated": "2026-09-26T14:30:00+08:00"},
-    {"name": "test-agent", "role": "测试工：构建+冒烟验收", "status": "done", "task": "v5.1.0 merge a4f68e9 后全量构建", "progress": 100, "updated": "2026-09-26T14:25:00+08:00"},
-    {"name": "rel-agent", "role": "发布工：版本/CHANGELOG/Release", "status": "idle", "task": "-", "progress": 0, "updated": "2026-09-26T14:30:00+08:00"},
-    {"name": "sync-agent", "role": "跟踪工：每日fetch上游出报告", "status": "done", "task": "a4f68e9 报告并合入", "progress": 100, "updated": "2026-09-26T14:20:00+08:00"}
+    {
+      "name": "port-agent",
+      "role": "移植工：1:1复刻上游功能",
+      "status": "done",
+      "task": "REWRITES机制梳理(总控接手完成)",
+      "progress": 100,
+      "updated": "2026-09-26T14:30:00+08:00"
+    },
+    {
+      "name": "fuse-agent",
+      "role": "融合工：叠加我方成果",
+      "status": "running",
+      "task": "提取C组同义映射 → rules_extra.json",
+      "progress": 10,
+      "updated": "2026-09-26T14:30:00+08:00"
+    },
+    {
+      "name": "test-agent",
+      "role": "测试工：构建+冒烟验收",
+      "status": "idle",
+      "task": "待验v5.2产出",
+      "progress": 0,
+      "updated": "2026-09-26T14:25:00+08:00"
+    },
+    {
+      "name": "rel-agent",
+      "role": "发布工：版本/CHANGELOG/Release",
+      "status": "idle",
+      "task": "-",
+      "progress": 0,
+      "updated": "2026-09-26T14:30:00+08:00"
+    },
+    {
+      "name": "sync-agent",
+      "role": "跟踪工：每日fetch上游出报告",
+      "status": "done",
+      "task": "a4f68e9 报告并合入",
+      "progress": 100,
+      "updated": "2026-09-26T14:20:00+08:00"
+    }
   ],
   "roadmap": [
-    {"ver": "v5.1", "name": "全功能对齐上游", "status": "done"},
-    {"ver": "v5.2", "name": "云过审REWRITES融合C组同义映射(外置rules_extra.json)", "status": "next"},
-    {"ver": "v5.3", "name": "战果引擎面板+战报生成器", "status": "todo"},
-    {"ver": "v6", "name": "多中转测速+GitHub Actions自动构建", "status": "todo"}
+    {
+      "ver": "v5.1",
+      "name": "全功能对齐上游",
+      "status": "done"
+    },
+    {
+      "ver": "v5.2",
+      "name": "云过审REWRITES融合C组同义映射(外置rules_extra.json)",
+      "status": "doing"
+    },
+    {
+      "ver": "v5.3",
+      "name": "战果引擎面板+战报生成器",
+      "status": "todo"
+    },
+    {
+      "ver": "v6",
+      "name": "多中转测速+GitHub Actions自动构建",
+      "status": "todo"
+    }
   ],
   "log": [
-    {"time": "2026-09-26 14:25", "who": "test-agent", "what": "v5.1.0 cargo release 编译通过 (2m44s)"},
-    {"time": "2026-09-26 14:20", "who": "sync-agent", "what": "上游 a4f68e9 已合入, POJIA品牌保留, 版本升5.1.0"},
-    {"time": "2026-09-26 13:40", "who": "main", "what": "v5.0 探针矩阵+弹药库+技能包三件套完成"}
+    {
+      "time": "2026-09-26 15:12",
+      "who": "main",
+      "what": "REWRITES梳理完成(docs/rewrites-analysis.md): 追加式规则+外置JSON极简格式两大铁律确认"
+    },
+    {
+      "time": "2026-09-26 14:55",
+      "who": "port-agent",
+      "what": "600s超时零产出, 总控接手"
+    },
+    {
+      "time": "2026-09-26 15:05",
+      "who": "main",
+      "what": "v5.2开工: port+fuse两工种并行, TG项目群播报已接通"
+    },
+    {
+      "time": "2026-09-26 14:25",
+      "who": "test-agent",
+      "what": "v5.1.0 cargo release 编译通过 (2m44s)"
+    },
+    {
+      "time": "2026-09-26 14:20",
+      "who": "sync-agent",
+      "what": "上游 a4f68e9 已合入, POJIA品牌保留, 版本升5.1.0"
+    },
+    {
+      "time": "2026-09-26 13:40",
+      "who": "main",
+      "what": "v5.0 探针矩阵+弹药库+技能包三件套完成"
+    }
   ]
 }
