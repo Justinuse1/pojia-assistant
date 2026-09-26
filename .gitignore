@@ -40,3 +40,6 @@ src-tauri/src/*.bak-*
 src-tauri/src/*.before-*
 src-tauri/src/*.presync
 src-tauri/src/*.reanchor.bak
+
+# 打包产物
+*.zip

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Moon, Sun, Bell, Crosshair } from 'lucide-react'
+import { Moon, Sun, Bell, Crosshair, Radar } from 'lucide-react'
 import {
   LayoutDashboard,
   MessageSquareCode,
@@ -24,6 +24,7 @@ export type PageId =
   | 'runtime'
   | 'cloud'
   | 'ammo'
+  | 'probe'
 
 export const TOPNAV: { id: PageId; idx: string; label: string; icon: LucideIcon }[] = [
   { id: 'dashboard', idx: '01', label: '总览', icon: LayoutDashboard },
@@ -34,6 +35,7 @@ export const TOPNAV: { id: PageId; idx: string; label: string; icon: LucideIcon 
   { id: 'runtime', idx: '06', label: 'POJIA-codex', icon: TerminalSquare },
   { id: 'cloud', idx: '07', label: '云过审', icon: CloudCog },
   { id: 'ammo', idx: '08', label: '弹药库', icon: Crosshair },
+  { id: 'probe', idx: '09', label: '探针矩阵', icon: Radar },
 ]
 
 /**

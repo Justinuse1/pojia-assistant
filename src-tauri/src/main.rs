@@ -9,6 +9,7 @@ mod winproc;
 mod alias;
 mod import_skill;
 mod ammo;
+mod probe;
 
 use tauri::Emitter;
 use tauri::Manager;
@@ -107,6 +108,13 @@ fn main() {
             runtime::read_host_config,
             runtime::read_bundled_config,
             runtime::sync_config_from_host,
+            // 探针矩阵
+            probe::probe_config_get,
+            probe::probe_config_set,
+            probe::probe_run,
+            probe::probe_status,
+            probe::probe_results,
+            probe::probe_open_reports,
             // 弹药库 / 经验复用
             ammo::ammo_list,
             ammo::ammo_save,
