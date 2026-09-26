@@ -31,7 +31,7 @@ function HeroTitle() {
   return (
     <div className="hero-copy">
       <h1 className="hero-title">
-        <span className="title-light">POJIA</span>
+        <span className="title-light">POJIA.AI</span>
       </h1>
     </div>
   )
@@ -1184,7 +1184,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (p: PageId) => void }) {
           ))}
         </div>
         <aside className={`globe-info-panel${hoveredFocus ? ' is-hovered' : ''}${hoveredClientId ? ' is-muted' : ''}`} aria-live="polite" onPointerEnter={() => setHoveredFocus(detailFocus)} onPointerLeave={() => setHoveredFocus(null)}>
-          <div className="globe-info-kicker"><span className="globe-info-live" />{detail.short} / POJIA</div>
+          <div className="globe-info-kicker"><span className="globe-info-live" />{detail.short} / POJIA.AI</div>
           <strong>{detail.title}</strong>
           <span className="globe-info-note">{detail.note}</span>
           <div className="globe-info-metric"><b>{detail.count}</b><span>个节点</span></div>

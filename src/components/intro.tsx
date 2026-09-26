@@ -21,7 +21,7 @@ import { ensureGlobeBuild, globeProgress, subscribeGlobeProgress } from '@/lib/g
  * ══ 透明度：地板从第一帧起就完全不透明（真机踩坑两次）════════════════
  * 这一层**绝不允许整体 opacity 过渡** —— 无论淡入还是淡出。
  * 两次真机问题都是同一个病根：只要 .intro 处于半透明，下面的总览界面
- * （地球点云 / POJIA 大字 / 左侧轨道 / 右侧面板）就会透上来糊成一片。
+ * （地球点云 / POJIA.AI 大字 / 左侧轨道 / 右侧面板）就会透上来糊成一片。
  *   · 第一次报「进入一瞬间会露出地球形状」→ 修的是**退场**；
  *   · 第二次报「开场一瞬间还是能看到总览界面」→ 病根在**入场**，
  *     原先 .intro 自己也做 0→1 淡入，那 320ms 里同样半透明。
@@ -58,8 +58,8 @@ const MIN_MS = 2800
  *
  * ══ 为什么不能整层 crossfade（真机复现）══════════════════════════════
  * 第一版是给 `.intro` 整层做 opacity 1→0 淡出。把过程冻在 50% 截图后看得很
- * 清楚：这一层半透明时，下面的主界面**整个透出来** —— 地球点云、POJIA 大字、
- * 左侧轨道、右侧面板全叠在「欢迎使用POJIA-Assistant」上，糊成一片。
+ * 清楚：这一层半透明时，下面的主界面**整个透出来** —— 地球点云、POJIA.AI 大字、
+ * 左侧轨道、右侧面板全叠在「欢迎使用POJIA.AI」上，糊成一片。
  *
  * 现在拆成两段，中间**不重叠**：
  *   ① 0 → OUT_CONTENT_MS：只淡出内容，地板保持**完全不透明**
@@ -85,7 +85,7 @@ const OUT_TOTAL_MS = OUT_CONTENT_MS + OUT_FLOOR_MS
 const HARD_CAP_MS = 8000
 
 const REPO_URL = 'https://github.com/alicewe1/alice-assistant'
-const TITLE = '欢迎使用POJIA-Assistant'
+const TITLE = '欢迎使用POJIA.AI'
 
 export function Intro({ onDone }: { onDone: () => void }) {
   /** 进度条是否已走满（走满才放出 Start 按钮）—— 一次性翻转，进 state 无压力 */

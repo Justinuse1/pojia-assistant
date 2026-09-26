@@ -108,9 +108,9 @@ source code.
 
 衍生作品声明 / Derivative Work Notice
 
-POJIA Assistant 是基于 Alice 助手 (alice-assistant) 的衍生作品，
+POJIA.AI Assistant 是基于 Alice 助手 (alice-assistant) 的衍生作品，
 依照 GPL-3.0-or-later 以同协议分发。
-POJIA Assistant is a derivative of Alice Assistant (alice-assistant),
+POJIA.AI Assistant is a derivative of Alice Assistant (alice-assistant),
 distributed under the same GPL-3.0-or-later license.
 
 原始作品 / Original work:
@@ -118,7 +118,7 @@ distributed under the same GPL-3.0-or-later license.
   Copyright (C) 2026 alicewe1 — GPL-3.0-or-later
 
 衍生与修改 / Derivative modifications:
-  POJIA Assistant — https://github.com/Justinuse1/pojia-assistant
+  POJIA.AI Assistant — https://github.com/Justinuse1/pojia-assistant
   修改内容: 品牌重塑、新增探针矩阵面板/战果引擎面板/弹药库管理等模块
   (Modifications: rebranding; added probe-matrix / victory-engine /
    ammo-library panels)

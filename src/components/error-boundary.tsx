@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     // 控制台保留完整堆栈，便于 dev 排查
-    console.error('[POJIA] 页面渲染异常:', error, info.componentStack)
+    console.error('[POJIA.AI] 页面渲染异常:', error, info.componentStack)
   }
 
   render() {

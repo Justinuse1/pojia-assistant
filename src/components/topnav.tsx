@@ -104,7 +104,7 @@ export function TopNav({
       <div className="topnav-brand" onClick={() => onNavigate('dashboard')}>
         <div className="logo-mark">A</div>
         <div className="topnav-brand-copy">
-          <div className="logo-name">POJIA</div>
+          <div className="logo-name">POJIA.AI</div>
           <div className="logo-sub">BENCH-01</div>
         </div>
       </div>

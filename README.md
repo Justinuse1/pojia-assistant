@@ -1,4 +1,4 @@
-# POJIA Assistant ⚡
+# POJIA.AI Assistant ⚡
 
 **POJIA.AI 的 Agent 客户端管理助手** — 提示词 × 技能库 × 客户端自由搭配，外加安全评测全套面板。
 

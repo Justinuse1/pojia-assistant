@@ -1,7 +1,7 @@
 [package]
 name = "pojia-assistant-ui"
 version = "5.0.0"
-description = "POJIA 助手工作台 - Bench-01"
+description = "POJIA.AI 助手工作台 - Bench-01"
 edition = "2021"
 
 [build-dependencies]

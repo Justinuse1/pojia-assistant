@@ -37,7 +37,7 @@ const CHECK_LABELS: [RuntimeCheckKey, string][] = [
   ['codexHome', '配置文件 config.toml'],
   ['codexExe', 'codex 运行时'],
   ['desktopExe', '桌面端完整性'],
-  ['skills', 'POJIA 技能库'],
+  ['skills', 'POJIA.AI 技能库'],
   ['prompts', '提示词库'],
 ]
 
@@ -181,7 +181,7 @@ export function Runtime() {
   }, [refreshCodex])
 
   useEffect(() => {
-    document.title = 'POJIA · POJIA-codex'
+    document.title = 'POJIA.AI · POJIA-codex'
   }, [])
 
   // 后端忙碌状态 = 本地 busy 或 store 的 probing
