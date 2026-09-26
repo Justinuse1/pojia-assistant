@@ -535,9 +535,9 @@ pub fn strip_block(existing: &str, begin_key: &str, end_key: &str) -> String {
 /// 用来回答「这个文件是不是我们上次写的」：
 ///   · 安装时 —— 是就直接覆盖，不必再备份；
 ///   · 卸载时 —— 配合字节数比对，确认没被用户改过才敢删。
-pub const MANAGED_BY_TAG: &str = "<!-- managed by alicewe -->";
+pub const MANAGED_BY_TAG: &str = "<!-- managed by pojia -->";
 
-/// 每个客户端注入文件的第一行署名（用户要求：alicewe，不带寒霜/版本信息）。
+/// 每个客户端注入文件的第一行署名（POJIA 署名，不带版本信息）。
 ///
 /// 写成 HTML 注释：codex/workbuddy/cursor 这类读 Markdown/规则文件的客户端
 /// 会把它当注释忽略，不会污染正文；但文件里又有迹可循，方便辨认来源。
@@ -1429,7 +1429,7 @@ pub fn inject_install(
             }
         }
 
-        // 整份写入：署名行（alicewe，无寒霜/版本）+ frontmatter + 正文
+        // 整份写入：署名行（pojia，无寒霜/版本）+ frontmatter + 正文
         let fm = t.frontmatter.clone().unwrap_or_default();
         let content = if fm.trim().is_empty() {
             format!("{}{}\n", managed_header(&client.id), body.trim_end())
@@ -3278,12 +3278,12 @@ mod tests {
         assert!(out.contains("MANAGED-PERSONA"), "人格块必须保留");
     }
 
-    /// 用户要求：注入文件的头必须是「managed by alicewe」，
+    /// 用户要求：注入文件的头必须是「managed by pojia」，
     /// 不能再带寒霜 / 破甲 / 版本号 —— 各客户端可能原样展示出来。
     #[test]
-    fn injected_signature_is_alicewe_without_version() {
+    fn injected_signature_is_pojia_without_version() {
         let head = managed_header("codex");
-        assert!(head.contains("<!-- managed by alicewe -->"), "应含 alicewe 署名: {head}");
+        assert!(head.contains("<!-- managed by pojia -->"), "应含 pojia 署名: {head}");
         for banned in ["寒霜", "破甲", "pojia", "v5", "v4", "HANSHUANG"] {
             assert!(
                 !head.to_lowercase().contains(&banned.to_lowercase()),

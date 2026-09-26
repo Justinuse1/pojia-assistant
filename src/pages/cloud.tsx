@@ -470,7 +470,7 @@ export function Cloud() {
                 <input
                   className="input mono"
                   style={{ width: 200 }}
-                  list="alice-models"
+                  list="pojia-models"
                   value={cfg.model}
                   onChange={(e) => patch({ model: e.target.value })}
                 />
@@ -489,7 +489,7 @@ export function Cloud() {
                 <input
                   className="input mono"
                   style={{ width: 200 }}
-                  list="alice-models"
+                  list="pojia-models"
                   value={cfg.testModel}
                   placeholder="留空 = 使用模型"
                   onChange={(e) => patch({ testModel: e.target.value })}
@@ -500,7 +500,7 @@ export function Cloud() {
               </div>
             </div>
 
-            <datalist id="alice-models">
+            <datalist id="pojia-models">
               {models.map((m) => (
                 <option key={m} value={m} />
               ))}

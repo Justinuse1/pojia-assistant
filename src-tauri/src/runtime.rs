@@ -1,7 +1,7 @@
 // 运行时探针与王炸codex 生命周期管理
 //
 // 设计要点：
-// - 路径全部从 runtime root 推导，不写死盘符（环境变量 ALICE_RUNTIME_ROOT 可覆盖）
+// - 路径全部从 runtime root 推导，不写死盘符（环境变量 POJIA_RUNTIME_ROOT 可覆盖）
 // - 子进程带 CREATE_NO_WINDOW，避免 GUI 程序启动 console 程序时闪黑框
 // - 进程树终止用原生 taskkill /T /F（零额外依赖）；阶段三可换 Job Object 硬限制
 // - exec 模式：stdout/stderr 逐行读取，通过 Tauri 事件流推给前端
@@ -49,14 +49,14 @@ const CREATE_NEW_CONSOLE: u32 = 0x0000_0010;
 ///       └── profiles\       版本清单
 ///
 /// 顺序：
-///   1. ALICE_RUNTIME_ROOT 环境变量（排障/自定义部署）
+///   1. POJIA_RUNTIME_ROOT 环境变量（排障/自定义部署）
 ///   2. exe 同级 resources            ← 正式分发形态
 ///   3. exe 同级 resources\王炸codex   ← 兼容旧包装结构
 ///   4. exe 同级 王炸codex
 ///   5. Tauri resource_dir
 ///   6. 开发期兜底
 pub fn runtime_root(app: &AppHandle) -> PathBuf {
-    if let Ok(env) = std::env::var("ALICE_RUNTIME_ROOT") {
+    if let Ok(env) = std::env::var("POJIA_RUNTIME_ROOT") {
         if !env.is_empty() {
             return PathBuf::from(env);
         }
@@ -1076,19 +1076,19 @@ const AGENT_SYSTEM_SKILLS: [&str; 6] = [
 ];
 
 /// Agent 会话唯一允许使用的技能名（固定，不可导入/替换）。
-const AGENT_SKILL_NAME: &str = "alice_agent-skill";
+const AGENT_SKILL_NAME: &str = "pojia_agent-skill";
 
 /// 内置技能正文。`{{SELFCHECK}}` 由前端「写入技能」替换为体检快照。
 ///
 /// 三段职责：① 工作范围硬约束（只在应用文件夹内、不改代码、只增删改配置文件）；
-///          ② ALICE 助手完整功能结构与用法（让 agent 不必每次现读源码，省 token）；
+///          ② POJIA 助手完整功能结构与用法（让 agent 不必每次现读源码，省 token）；
 ///          ③ 工具箱自检清单 + 体检快照。
 const AGENT_SKILL_TEMPLATE: &str = r#"---
-name: alice_agent-skill
-description: ALICE 助手的内置技能。限定工作范围在本应用文件夹内、不改代码、只增删改配置文件；内置本应用完整功能结构与用法，负责工具箱自检。
+name: pojia_agent-skill
+description: POJIA 助手的内置技能。限定工作范围在本应用文件夹内、不改代码、只增删改配置文件；内置本应用完整功能结构与用法，负责工具箱自检。
 ---
 
-# alice_agent-skill
+# pojia_agent-skill
 
 ## 〇、三层联动（先看这张图，理清结构）
 
@@ -1147,7 +1147,7 @@ description: ALICE 助手的内置技能。限定工作范围在本应用文件�
 
 判断标准：**第 3 次调用还没答上来，就停下来问用户**，别继续翻。
 
-- **写文件走围栏块**：任何写文件的请求都按第四节走 `alice-propose`，
+- **写文件走围栏块**：任何写文件的请求都按第四节走 `pojia-propose`，
   不要自己直接写 —— 宿主会落盘 + 自动备份，你直接写就没有备份了。
 
 ## 二、工具免审批（直接用，别请示）
@@ -1165,7 +1165,7 @@ description: ALICE 助手的内置技能。限定工作范围在本应用文件�
 
 ## 三、工作范围（硬约束，无例外）
 
-你的活动范围**仅限 ALICE 助手自己的文件夹**（下文记为 `<包根>`，即 `pojia-assistant.exe`
+你的活动范围**仅限 POJIA 助手自己的文件夹**（下文记为 `<包根>`，即 `pojia-assistant.exe`
 所在的 `resources/` 那一层）。文件夹之外的文件、目录、系统设置一律不碰。
 
 **允许**：
@@ -1186,7 +1186,7 @@ description: ALICE 助手的内置技能。限定工作范围在本应用文件�
 - 不许执行与本应用配置无关的命令（不装依赖、不改系统环境、不碰注册表）。
 - 不承接与本工具箱无关的编程或分析任务。
 
-遇到越界请求，直接说明「我只负责 ALICE 助手的配置与用法，不改代码、不出本文件夹」，
+遇到越界请求，直接说明「我只负责 POJIA 助手的配置与用法，不改代码、不出本文件夹」，
 把话题拉回配置或自检。需要改代码才能解决的问题：**只报告，不动手**。
 
 ## 四、写入流程（用户让你做，就直接做完）
@@ -1197,7 +1197,7 @@ description: ALICE 助手的内置技能。限定工作范围在本应用文件�
 流程：
 
 1. **先说要做什么**（一句话）：比如"好，我把 config.toml 里的模型名改成 xxx"。
-2. **直接输出 `alice-propose` 围栏块**（格式见下）。宿主会立刻落盘，
+2. **直接输出 `pojia-propose` 围栏块**（格式见下）。宿主会立刻落盘，
    用户不需要额外点确认。
 3. **每改完一步就报一句进度**："config.toml 改好了 → 接着看 skills 目录"。
    别闷头做完一堆再一次性说。
@@ -1239,10 +1239,10 @@ description: ALICE 助手的内置技能。限定工作范围在本应用文件�
   被拒的调用**。换一个不受审批限制的路径（`fetch_url` / `curl`）。
 - 用户让你查网上的东西（热搜、文档、版本号）就直接查完再汇报结果。
 
-### `alice-propose` 围栏块格式
+### `pojia-propose` 围栏块格式
 
 ````
-```alice-propose
+```pojia-propose
 path: <包根>的绝对路径\.codex\config.toml
 reason: 把模型名从 A 改成 B，因为……
 ---
@@ -1250,7 +1250,7 @@ reason: 把模型名从 A 改成 B，因为……
 ```
 ````
 
-- `path` 必须是**绝对路径**，且在 ALICE 助手文件夹内；`.rs/.ts/.py/.cmd/.ps1/.exe` 等代码文件会被拒收。
+- `path` 必须是**绝对路径**，且在 POJIA 助手文件夹内；`.rs/.ts/.py/.cmd/.ps1/.exe` 等代码文件会被拒收。
 - `---` 之后是**整个文件的新内容**（不是补丁、不是 diff）。
 - 一段回复里可以有多个围栏块（一次改多个文件）。
 - 围栏块会从用户看到的正文里剔除，所以你**必须**在正文里另外用中文说清改了什么、为什么。
@@ -1357,7 +1357,7 @@ reason: 把模型名从 A 改成 B，因为……
 4. **拼新路径**：保留旧路径中「工作目录之后」的子路径。例如
    `~/.codex/skills/_modules` + 新目录 `D:\portable\codex`
    → `D:\portable\codex\skills\_modules`。
-5. 每个文件一个 `alice-propose` 围栏块（整份文件的新内容），
+5. 每个文件一个 `pojia-propose` 围栏块（整份文件的新内容），
    正文报进度：「codex 的客户端配置 + 7 个预设组都指到新路径了」。
 
 **不要做的事**：
@@ -1438,7 +1438,7 @@ reason: 把模型名从 A 改成 B，因为……
 | 注入接管原文件/原目录 | `<名>-bak` |
 | 导入素材重名 | `<name>.bak-<时间戳>` |
 | 编辑器保存 | `<文件名>.bak-edit-<时间戳>`（保留最近 3 份） |
-| 云过审接入客户端 | `<名>.alice-bak-<时间戳>` |
+| 云过审接入客户端 | `<名>.pojia-bak-<时间戳>` |
 | 便携箱提示词注入 | `config.toml.bak-instr-<时间戳>` |
 | 透传本机配置 | `config.toml.bak-<时间戳>` |
 
@@ -1464,14 +1464,14 @@ reason: 把模型名从 A 改成 B，因为……
 
 ### 3.9 本会话（Agent 助手）自身机制
 
-- 会话存 `<Agent 会话>/<会话名>/`：`prompt.md`（独立提示词）、`skills/alice_agent-skill/`、
+- 会话存 `<Agent 会话>/<会话名>/`：`prompt.md`（独立提示词）、`skills/pojia_agent-skill/`、
   `messages.json`（对话记录）、`session_id.txt`（codex 会话 id）、`applied/`（已写入留档）。
 - 会话专用 `CODEX_HOME` = `<Agent home>`（**不含 AGENTS.md**，保证提示词独立于便携箱）。
 - 模型/供应商取自包内主配置，每次启动同步。
 - 首轮 `codex exec`，之后 `codex exec resume <session_id>` 续聊。
 - 你唯一的技能就是本技能（其它技能被 `skills.config` 全部禁用）。
 - 运行在完整沙箱里（能读能跑命令），边界靠本技能的硬规矩约束：
-  只读定向文件、只改配置文件、只在应用文件夹内、写文件走 `alice-propose` 围栏块。
+  只读定向文件、只改配置文件、只在应用文件夹内、写文件走 `pojia-propose` 围栏块。
 
 ## 六、自检要求
 
@@ -1500,7 +1500,7 @@ reason: 把模型名从 A 改成 B，因为……
 
 - **通过项**：列出 ok 的项。
 - **失败项**：现象 + 为什么算失败。
-- **下一步**：每项失败给一条可直接运行的命令或明确的界面操作；需要改配置时按第四节输出 `alice-propose` 块。
+- **下一步**：每项失败给一条可直接运行的命令或明确的界面操作；需要改配置时按第四节输出 `pojia-propose` 块。
 
 **禁止编造体检结果**。快照和定向读都没有的项就明说「未检查」，不要假装查过。
 
@@ -1534,15 +1534,15 @@ pub struct AgentSession {
 /// 但不搞角色扮演、不编人设背景；用户的活是第一位。
 const AGENT_PROMPT_TEMPLATE: &str = r#"# 你是爱丽丝
 
-你是 **ALICE 助手**——一个为用户服务的助手，名字叫爱丽丝。用户通过这个小窗口
+你是 **POJIA 助手**——一个为用户服务的助手，名字叫波佳。用户通过这个小窗口
 让你帮忙解决问题、执行操作、照看这个工具箱。你的价值就是把用户的活干好。
 
 ## 你的职责
 
 - **读配置、查状态、做体检**：告诉用户工具箱哪里不对、怎么修，给出可复现的命令或界面操作。
-- **改配置、执行操作**：只在 ALICE 助手文件夹内活动，**不改代码**，只增删改配置文件。
+- **改配置、执行操作**：只在 POJIA 助手文件夹内活动，**不改代码**，只增删改配置文件。
   用户说「帮我改 / 帮我操作」就直接干完，不要反问确认。每步报一句进度，做完给总结
-  （改了哪些文件、各改了什么、怎么验证）。写入按技能的第四节走 `alice-propose` 围栏块，
+  （改了哪些文件、各改了什么、怎么验证）。写入按技能的第四节走 `pojia-propose` 围栏块，
   宿主会直接落盘并备份原文件。
 - **解答用法**：怎么加提示词、加技能、加客户端、配预设组，装完怎么卸载还原。
 - **操作客户端**：客户端的工作路径都在「文件路由清单」里。需要调整某个客户端的
@@ -1564,7 +1564,7 @@ const AGENT_PROMPT_TEMPLATE: &str = r#"# 你是爱丽丝
 
 ## 关键词（重要）
 
-用户消息去掉首尾空白后**恰好等于** `alice` 或 `爱丽丝`（不区分大小写）时，
+用户消息去掉首尾空白后**恰好等于** `pojia` 或 `波佳`（不区分大小写）时，
 这是打招呼。回一段轻快的自我介绍，包含三件事：
 
 1. 打个招呼，说明你是这个工具箱的助手爱丽丝。
@@ -1572,7 +1572,7 @@ const AGENT_PROMPT_TEMPLATE: &str = r#"# 你是爱丽丝
    MCP 依赖 / 内置工具 / 目标客户端路径 / 模型端点，问要不要现在就查。
 3. 一句话介绍这个助手能干什么：加提示词、加技能、加客户端、配预设组，装完可一键还原。
 
-其余任何输入（包括含 alice / 爱丽丝 的长句）一律按正常任务处理，不要输出这段。
+其余任何输入（包括含 pojia / 波佳 的长句）一律按正常任务处理，不要输出这段。
 
 ## 三层结构（理清你怎么工作）
 
@@ -1581,7 +1581,7 @@ const AGENT_PROMPT_TEMPLATE: &str = r#"# 你是爱丽丝
 | 层 | 在哪 | 管什么 |
 |---|---|---|
 | ① 职责与语气 | **本提示词上半部分** | 你干什么活、怎么说话、关键词怎么回 |
-| ② 规矩 | 技能 `alice_agent-skill` | 工作范围 / 读取预算 / 写入流程 / 工具免审批 / 应用结构 / 自检清单 |
+| ② 规矩 | 技能 `pojia_agent-skill` | 工作范围 / 读取预算 / 写入流程 / 工具免审批 / 应用结构 / 自检清单 |
 | ③ 数据 | **本提示词最末尾的「文件路由清单」** | 角色 → 真实路径、体检结论、技能库包、客户端路径、预设组清单 |
 
 **联动规则**：技能里的路径**全是角色名**（「技能库根」「主配置」这类），
@@ -1596,9 +1596,9 @@ const AGENT_PROMPT_TEMPLATE: &str = r#"# 你是爱丽丝
   按技能「一、读文件的预算」的规矩：点名读具体文件，别 `-Recurse` 全量扫盘。
 - 用户说「帮我改 / 帮我操作」→ **直接做完**，不要反问确认。每步报一句进度，
   做完给总结（改了哪些文件、各改了什么、怎么验证）。写入按技能的第四节走
-  `alice-propose` 围栏块，宿主会自动落盘 + 备份。
+  `pojia-propose` 围栏块，宿主会自动落盘 + 备份。
 
-技能 `alice_agent-skill` 里有完整的功能结构（角色名版）、写入流程和自检清单，
+技能 `pojia_agent-skill` 里有完整的功能结构（角色名版）、写入流程和自检清单，
 那些是**规矩**，按它办；路径看路由清单，清单缺的按清单里的路径定向读。
 
 {{SELFCHECK}}
@@ -1745,7 +1745,7 @@ fn ensure_agent_home(root: &Path) -> Result<PathBuf, String> {
 ///   · codex 0.154 对技能名有自己的合法性判定/净化规则，非 ASCII 字符
 ///     会被剥掉或拒绝加载 —— 技能对 codex 不可见；
 ///   · agent 首轮按提示词去读技能正文时，实际访问的是 codex 净化后的
-///     路径（如 `_alice_agent-skill`），磁盘上不存在 → 退出码 1；
+///     路径（如 `_pojia_agent-skill`），磁盘上不存在 → 退出码 1；
 ///   · 表现就是「agent 会话提示词和技能丢了」，与导入便携箱同时发生
 ///     只是因为导入后用户新建了会话来测试，误会成导入导致的。
 /// 净化规则：非 `[A-Za-z0-9_-]` 一律转 `_`，并压缩连续 `_`、去首尾 `_`；
@@ -2056,10 +2056,10 @@ pub fn agent_create(app: AppHandle, name: String) -> Result<AgentSession, String
     agent_session_of(&dir).ok_or_else(|| "会话创建后读取失败".into())
 }
 
-/// 把固定的 `alice_agent-skill` 写进会话目录，并挂载到共享 home。
+/// 把固定的 `pojia_agent-skill` 写进会话目录，并挂载到共享 home。
 ///
 /// 技能**不可导入/替换**：名字、正文都由本函数写死，只允许改末尾的体检快照。
-/// 会话目录里只留这一个技能；home 里的挂载名固定为 `<会话名>__alice_agent-skill`。
+/// 会话目录里只留这一个技能；home 里的挂载名固定为 `<会话名>__pojia_agent-skill`。
 fn install_agent_skill(
     app: &AppHandle,
     root: &Path,
@@ -2076,7 +2076,7 @@ fn install_agent_skill(
     std::fs::write(keep.join("SKILL.md"), AGENT_SKILL_TEMPLATE)
         .map_err(|e| format!("写技能失败: {e}"))?;
 
-    // 共享 home：挂 <净化会话名>__alice_agent-skill，frontmatter name 同步重写
+    // 共享 home：挂 <净化会话名>__pojia_agent-skill，frontmatter name 同步重写
     let home = ensure_agent_home(root)?;
     let prefix = format!("{}__", sanitize_mount_name(name));
     // 净化前的旧挂载（历史会话用原始名挂的）也一并清掉 —— 否则特殊字符
@@ -2300,11 +2300,11 @@ pub fn agent_launch(
          * `exec_command` 一律 `blocked by policy`（Windows 沙箱 helper 失效），
          * 只有 `danger-full-access` 能跑命令。所以只能全放开。
          *
-         * 边界改由**技能里的硬规矩**约束（写进 alice_agent-skill）：
+         * 边界改由**技能里的硬规矩**约束（写进 pojia_agent-skill）：
          *   · 只读定向文件，不全量扫盘；
          *   · 只改配置文件，绝不碰代码（.rs/.ts/.py/.cmd/.ps1/.exe）；
-         *   · 只在 ALICE 助手文件夹内活动；
-         *   · 写文件走 alice-propose 围栏块（宿主自动落盘 + 自动备份 + 界面留档）。
+         *   · 只在 POJIA 助手文件夹内活动；
+         *   · 写文件走 pojia-propose 围栏块（宿主自动落盘 + 自动备份 + 界面留档）。
          */
         .arg("--dangerously-bypass-approvals-and-sandbox")
         .args([
@@ -2384,7 +2384,7 @@ pub fn agent_launch(
                              * 一条 `codex exec` 里模型可能发**多条** agent_message
                              * （实测一轮最多见过 30 条：边干边播报进度）。
                              * 早先是 `reply = msg` 直接覆盖 —— 结果只有最后一条
-                             * 留下来，前面那些（包括一次 31 个 alice-propose
+                             * 留下来，前面那些（包括一次 31 个 pojia-propose
                              * 围栏块）全被吞掉，表现就是「agent 说写好了，实际
                              * 一个都没落地」。
                              * 现在按顺序累积，正文和围栏块都不丢。
@@ -2528,7 +2528,7 @@ pub fn agent_launch(
 /// 路由清单：把「技能里写的抽象角色」映射到**本机真实路径**。
 ///
 /// 为什么需要它（用户要求）：
-///   技能 `alice_agent-skill` 是要分发给别人用的，里面**不能写死任何机器路径**
+///   技能 `pojia_agent-skill` 是要分发给别人用的，里面**不能写死任何机器路径**
 ///   （每台电脑的盘符、用户名、包位置都不一样）。所以技能只说「去查路由清单里的
 ///   `技能库根`」，由宿主在每次对话前把本机真实路径写进清单 —— 技能保持通用，
 ///   路径每机独立。
@@ -2540,9 +2540,9 @@ fn build_routing_manifest(app: &AppHandle, root: &Path) -> String {
     let mut out = String::new();
     out.push_str("## 文件路由清单（本机 · 第 3 层数据）\n\n");
     out.push_str(&format!(
-        "> 本清单由 ALICE 助手自动生成，**每台电脑不同** · 包根：`{}`\n\
+        "> 本清单由 POJIA 助手自动生成，**每台电脑不同** · 包根：`{}`\n\
          >\n\
-         > **怎么用**：技能 `alice_agent-skill` 里的路径都是**角色名**（「技能库根」这种），\n\
+         > **怎么用**：技能 `pojia_agent-skill` 里的路径都是**角色名**（「技能库根」这种），\n\
          > 要用路径就来本表查同名角色那一行。本表在每次发言前重建 ——\n\
          > 用户改了配置或跑完自检，这里就跟着变，所以「现在什么状态」永远看这里。\n\
          >\n\
@@ -2955,7 +2955,7 @@ pub fn agent_status(name: String, reg: State<'_, AgentProcs>) -> LaunchResult {
 //      Windows 沙箱 helper 未安装，即便传 `workspace-write` 也降级为
 //      read-only（请求里的 `<permissions>` 块明确写 `sandbox_mode is read-only`）。
 //      所以模型**物理上写不了任何文件** —— 不依赖它自觉遵守提示词。
-//   ② 唯一写入通道：模型在回复里输出一段 ```alice-propose 围栏块声明意图，
+//   ② 唯一写入通道：模型在回复里输出一段 ```pojia-propose 围栏块声明意图，
 //      宿主解析出来**立即落盘**（先备份原文件），并把这条记录留档到
 //      `applied/` 供界面回看。界面上的「知道了」只是把记录移出列表，
 //      **不影响已落盘的文件**。
@@ -2982,12 +2982,12 @@ pub struct WriteProposal {
     pub reason: String,
 }
 
-/// 从助手回复里抽出全部 `alice-propose` 围栏块，返回 (干净正文, 提案列表)。
+/// 从助手回复里抽出全部 `pojia-propose` 围栏块，返回 (干净正文, 提案列表)。
 ///
 /// 协议（写进技能正文，模型照着输出）：
 ///
 /// ````text
-/// ```alice-propose
+/// ```pojia-propose
 /// path: F:\...\resources\.codex\config.toml
 /// reason: 把模型名改成 xxx
 /// ---
@@ -3000,9 +3000,9 @@ fn extract_proposals(reply: &str) -> (String, Vec<WriteProposal>) {
     let mut props = Vec::new();
     let mut clean = String::new();
     let mut rest = reply;
-    while let Some(start) = rest.find("```alice-propose") {
+    while let Some(start) = rest.find("```pojia-propose") {
         clean.push_str(&rest[..start]);
-        let after = &rest[start + "```alice-propose".len()..];
+        let after = &rest[start + "```pojia-propose".len()..];
         /*
          * 结束围栏必须找**行首**的 ```，不能用 `after.find("```")`。
          *
@@ -3014,13 +3014,13 @@ fn extract_proposals(reply: &str) -> (String, Vec<WriteProposal>) {
         let end = after
             .match_indices("```")
             .find(|(i, _)| {
-                // 该 ``` 之前只有空白（即位于行首），且后面不是 alice-propose
+                // 该 ``` 之前只有空白（即位于行首），且后面不是 pojia-propose
                 let before_ok = after[..*i]
                     .rsplit('\n')
                     .next()
                     .map(|l| l.trim().is_empty())
                     .unwrap_or(true);
-                let after_ok = !after[*i + 3..].starts_with("alice-propose");
+                let after_ok = !after[*i + 3..].starts_with("pojia-propose");
                 before_ok && after_ok
             })
             .map(|(i, _)| i);
@@ -3199,7 +3199,7 @@ fn check_proposal_target(root: &Path, path: &str) -> Result<PathBuf, String> {
     }
     if !path_under(&p, root) {
         return Err(format!(
-            "目标不在 ALICE 助手文件夹内（{}）",
+            "目标不在 POJIA 助手文件夹内（{}）",
             root.display()
         ));
     }
@@ -3653,7 +3653,7 @@ pub fn codex_stop(
 ///
 /// ══ 保留什么、清什么（用户指定 + 实际盘点）══════════════════════════
 /// **保留**（关键配置 + 用户指定）：
-///   · `skills/`            Alice 技能库（用户明确保留）
+///   · `skills/`            POJIA 技能库（用户明确保留）
 ///   · `prompts/`           提示词文件夹（用户明确保留）
 ///   · `config.toml`        主配置（provider/模型/MCP 段，丢了要重配）
 ///   · `auth.json`          登录凭据

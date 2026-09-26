@@ -37,7 +37,7 @@ const CHECK_LABELS: [RuntimeCheckKey, string][] = [
   ['codexHome', '配置文件 config.toml'],
   ['codexExe', 'codex 运行时'],
   ['desktopExe', '桌面端完整性'],
-  ['skills', 'Alice 技能库'],
+  ['skills', 'POJIA 技能库'],
   ['prompts', '提示词库'],
 ]
 
@@ -181,7 +181,7 @@ export function Runtime() {
   }, [refreshCodex])
 
   useEffect(() => {
-    document.title = 'ALICE · POJIA-codex'
+    document.title = 'POJIA · POJIA-codex'
   }, [])
 
   // 后端忙碌状态 = 本地 busy 或 store 的 probing
@@ -726,7 +726,7 @@ export function Runtime() {
               )}
             </div>
             <div className="sub" style={{ marginTop: 8, fontSize: 11, opacity: 0.75 }}>
-              进程可被外部 taskkill / 任务管理器正常终止；alice 退出时由 Job Object
+              进程可被外部 taskkill / 任务管理器正常终止；进程退出时由 Job Object
               回收整棵子树，不会留孤儿。
             </div>
           </div>

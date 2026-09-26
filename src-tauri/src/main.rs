@@ -202,5 +202,5 @@ fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("Alice 启动失败");
+        .expect("POJIA 启动失败");
 }

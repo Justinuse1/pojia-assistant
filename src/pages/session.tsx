@@ -486,7 +486,7 @@ export function Session() {
               <EmptyState
                 icon={<Bot size={30} />}
                 title="选择左侧会话"
-                hint="每个会话有独立提示词；技能固定为内置 alice_agent-skill"
+                hint="每个会话有独立提示词；技能固定为内置 pojia_agent-skill"
               />
             </div>
           ) : (
@@ -512,7 +512,7 @@ export function Session() {
                     title="固定技能：自检 + 限定工作范围（不可更换）"
                     style={{ cursor: 'default' }}
                   >
-                    alice_agent-skill
+                    pojia_agent-skill
                   </span>
                   <span
                     className="badge badge-neutral"
@@ -552,7 +552,7 @@ export function Session() {
               <div className="glass transcript" data-tour="session.thread" ref={scrollRef} style={{ marginBottom: 12 }}>
                 {messages.length === 0 && (
                   <div className="sub" style={{ padding: 20 }}>
-                    就绪。输入 <code>alice</code> 会得到「助手在线」；其余按正常任务处理。
+                    就绪。输入 <code>pojia</code> 会得到「助手在线」；其余按正常任务处理。
                   </div>
                 )}
                 {messages.map((m, i) => (

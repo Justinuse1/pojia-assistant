@@ -1548,7 +1548,7 @@ fn handle_conn(
         let gate_text = "DeepSeek Harness 工程通道 v5 当前专业版";
         let reply = if is_responses_body(&req_json) {
             let chat_shape = serde_json::json!({
-                "id": "alice-gate",
+                "id": "pojia-gate",
                 "object": "chat.completion",
                 "model": cfg.model,
                 "choices": [{"index":0,"message":{"role":"assistant","content":gate_text},"finish_reason":"stop"}]
@@ -1568,7 +1568,7 @@ fn handle_conn(
             chat_to_responses(&chat_shape, &cfg.model)
         } else {
             serde_json::json!({
-                "id": "alice-gate",
+                "id": "pojia-gate",
                 "object": "chat.completion",
                 "model": cfg.model,
                 "choices": [{"index":0,"message":{"role":"assistant","content":gate_text},"finish_reason":"stop"}]
@@ -2123,7 +2123,7 @@ fn sse_delta_texts(body: &[u8]) -> (String, String) {
 fn sse_single_message(model: &str, text: &str) -> Vec<u8> {
     let chunk = |delta: serde_json::Value, finish: serde_json::Value| -> String {
         let v = serde_json::json!({
-            "id": "alice-clean",
+            "id": "pojia-clean",
             "object": "chat.completion.chunk",
             "model": model,
             "choices": [{"index": 0, "delta": delta, "finish_reason": finish}]

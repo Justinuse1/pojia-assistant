@@ -18,23 +18,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "alice-ui"
-version = "5.0.0"
-dependencies = [
- "base64 0.22.1",
- "regex",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-shell",
- "ureq",
- "zip",
-]
-
-[[package]]
 name = "alloc-no-stdlib"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2411,6 +2394,23 @@ dependencies = [
  "fdeflate",
  "flate2",
  "miniz_oxide 0.8.9",
+]
+
+[[package]]
+name = "pojia-assistant-ui"
+version = "5.0.0"
+dependencies = [
+ "base64 0.22.1",
+ "regex",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-shell",
+ "ureq",
+ "zip",
 ]
 
 [[package]]

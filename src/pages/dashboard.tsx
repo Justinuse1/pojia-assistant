@@ -31,7 +31,7 @@ function HeroTitle() {
   return (
     <div className="hero-copy">
       <h1 className="hero-title">
-        <span className="title-light">ALICE</span>
+        <span className="title-light">POJIA</span>
       </h1>
     </div>
   )
@@ -156,7 +156,7 @@ const DROP_MAGNIFY = 1.7
  *   要拿到 M 倍放大，边缘位移应为 R(1 − 1/M)
  *   ⇒ scale = 2R(1 − 1/M)
  */
-const DROP_FILTER_ID = 'alice-water-drop'
+const DROP_FILTER_ID = 'pojia-water-drop'
 function ensureDropFilter(diameter: number) {
   const old = document.getElementById(DROP_FILTER_ID + '-svg')
   if (old) old.remove()
@@ -1184,7 +1184,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (p: PageId) => void }) {
           ))}
         </div>
         <aside className={`globe-info-panel${hoveredFocus ? ' is-hovered' : ''}${hoveredClientId ? ' is-muted' : ''}`} aria-live="polite" onPointerEnter={() => setHoveredFocus(detailFocus)} onPointerLeave={() => setHoveredFocus(null)}>
-          <div className="globe-info-kicker"><span className="globe-info-live" />{detail.short} / ALICE</div>
+          <div className="globe-info-kicker"><span className="globe-info-live" />{detail.short} / POJIA</div>
           <strong>{detail.title}</strong>
           <span className="globe-info-note">{detail.note}</span>
           <div className="globe-info-metric"><b>{detail.count}</b><span>个节点</span></div>

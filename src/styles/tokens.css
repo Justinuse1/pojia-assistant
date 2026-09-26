@@ -1,5 +1,5 @@
 /* ============================================================
-   ALICE · BENCH-01 设计系统
+   POJIA · BENCH-01 设计系统
    立场：仪器台美学 —— 纸感白 / 油墨黑 / 信号橙 / 等宽标注 /
    发丝线分割 / 苹果式透明玻璃（贴满全界面，不只是顶栏与弹窗）
 
@@ -3654,8 +3654,8 @@ textarea,
    * 折射本体：backdrop-filter 拿元素背后的画面作输入，
    * 经 SVG 位移滤镜扭曲后绘制。url 里的 id 由 dashboard.tsx 注入。
    */
-  -webkit-backdrop-filter: url(#alice-water-drop);
-  backdrop-filter: url(#alice-water-drop);
+  -webkit-backdrop-filter: url(#pojia-water-drop);
+  backdrop-filter: url(#pojia-water-drop);
   /*
    * 水珠的立体感：厚壳 —— 外描边 + 内侧两道明暗 + 底部投影。
    * 用 box-shadow inset 而不是背景色：保持泡体透明，只加「壳」，
@@ -3711,7 +3711,7 @@ textarea,
 }
 
 /* ============================================================
-   极简首页：ALICE 粒子地球控制核
+   极简首页：POJIA 粒子地球控制核
    ============================================================ */
 .dash-globe-page { --signal: #ff5b2e; --signal-raw: 255,91,46; --signal-soft: rgba(255,91,46,.1); --ok: #0e9b66; --ok-soft: rgba(14,155,102,.1); min-height: calc(100vh - 74px); overflow: hidden; background: transparent; color: var(--ink); }
 .dash-globe-page.globe-dark { --ink: #eef8f5; --ink-raw: 238,248,245; --muted: rgba(238,248,245,.58); --faint: rgba(238,248,245,.32); --hairline: rgba(238,248,245,.14); --hairline-strong: rgba(238,248,245,.28); --surf-border: rgba(238,248,245,.18); --surf-border-strong: rgba(238,248,245,.34); --surf-edge-light: rgba(255,255,255,.28); --surf-edge-dark: rgba(0,0,0,.36); --surf-shadow-far: rgba(0,0,0,.42); --ok: #43e0a4; --ok-soft: rgba(67,224,164,.14); background: transparent; }
@@ -4557,7 +4557,7 @@ html[data-theme='dark'] .input option {
   overflow: hidden;
   /*
    * ══ 地板**没有任何 opacity 动画**（真机踩坑两次，别再给它加淡入）══════
-   * 这一层一旦处于半透明，下面的总览界面（地球点云 / ALICE 大字 / 左侧
+   * 这一层一旦处于半透明，下面的总览界面（地球点云 / POJIA 大字 / 左侧
    * 轨道 / 右侧面板）就会透上来糊成一片。两次报障都是这个病根：
    *   · 「进入一瞬间会露出地球形状」→ 退场整层 crossfade；
    *   · 「开场一瞬间还是能看到总览界面」→ **入场**写了 `intro-in` 淡入，
@@ -4573,8 +4573,8 @@ html[data-theme='dark'] .input option {
  *
  * ══ 为什么不能整层 crossfade（真机复现）══════════════════════════════
  * 原先给 .intro 整层做 opacity 1→0。把过程冻在 50% 截图后看得很清楚：
- * 这一层半透明时下面的主界面**整个透出来** —— 地球点云、ALICE 大字、
- * 左侧轨道、右侧面板全叠在「欢迎使用ALICE-Assistant」上，糊成一片。
+ * 这一层半透明时下面的主界面**整个透出来** —— 地球点云、POJIA 大字、
+ * 左侧轨道、右侧面板全叠在「欢迎使用POJIA-Assistant」上，糊成一片。
  *
  * 现在拆成两段，中间不重叠：
  *   ① .intro-inner 0→240ms 淡出（内容消失），此期间 .intro 地板**保持不透明**
