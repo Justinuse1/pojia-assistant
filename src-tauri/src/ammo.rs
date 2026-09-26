@@ -185,7 +185,11 @@ pub fn ammo_list(
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
     let total = items.len() as i64;
-    Ok(AmmoList { ok: true, items, total })
+    Ok(AmmoList {
+        ok: true,
+        items,
+        total,
+    })
 }
 
 /// 新增/更新弹药（code 相同则 upsert）
@@ -215,8 +219,20 @@ pub fn ammo_save(
              cve=excluded.cve, component=excluded.component, language=excluded.language,
              description=excluded.description, usage=excluded.usage, content=excluded.content,
              tags=excluded.tags, updated_at=excluded.updated_at"#,
-        rusqlite::params![code, title, kind, category, cve, component, language,
-                          description, usage, content, tags, now],
+        rusqlite::params![
+            code,
+            title,
+            kind,
+            category,
+            cve,
+            component,
+            language,
+            description,
+            usage,
+            content,
+            tags,
+            now
+        ],
     )
     .map_err(|e| e.to_string())?;
     let id = conn.last_insert_rowid();
@@ -230,7 +246,11 @@ pub fn ammo_save(
          SELECT id, title, cve, component, versions, tags, description, content FROM poc WHERE code=?1",
         rusqlite::params![code],
     );
-    Ok(AmmoOp { ok: true, id: Some(id), message: "saved".into() })
+    Ok(AmmoOp {
+        ok: true,
+        id: Some(id),
+        message: "saved".into(),
+    })
 }
 
 /// 复用计数：每次实际使用 +1 并记 used_on（经验复用的核心闭环）
@@ -246,7 +266,11 @@ pub fn ammo_use(code: String, used_on: String) -> Result<AmmoOp, String> {
     Ok(AmmoOp {
         ok: n > 0,
         id: None,
-        message: if n > 0 { "counted".into() } else { "no such code".into() },
+        message: if n > 0 {
+            "counted".into()
+        } else {
+            "no such code".into()
+        },
     })
 }
 
@@ -260,7 +284,11 @@ pub fn ammo_verify(code: String, verified: bool, note: Option<String>) -> Result
             rusqlite::params![code, verified as i64, note, chrono_now()],
         )
         .map_err(|e| e.to_string())?;
-    Ok(AmmoOp { ok: n > 0, id: None, message: "verified".into() })
+    Ok(AmmoOp {
+        ok: n > 0,
+        id: None,
+        message: "verified".into(),
+    })
 }
 
 /// 删除弹药
@@ -273,7 +301,11 @@ pub fn ammo_delete(code: String) -> Result<AmmoOp, String> {
         "DELETE FROM poc_fts WHERE poc_id NOT IN (SELECT id FROM poc)",
         [],
     );
-    Ok(AmmoOp { ok: true, id: None, message: "deleted".into() })
+    Ok(AmmoOp {
+        ok: true,
+        id: None,
+        message: "deleted".into(),
+    })
 }
 
 fn chrono_now() -> String {

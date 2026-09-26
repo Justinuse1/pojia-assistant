@@ -91,8 +91,11 @@ pub fn probe_config_set(
     if let Some(dir) = p.parent() {
         let _ = std::fs::create_dir_all(dir);
     }
-    std::fs::write(&p, serde_json::to_string_pretty(&c).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
+    std::fs::write(
+        &p,
+        serde_json::to_string_pretty(&c).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -170,10 +173,24 @@ fn parse_line(s: &str) -> ProbeLine {
             .and_then(|seg| seg.rsplit([' ', ':']).next())
             .and_then(|x| x.trim().parse().ok());
         if let Some(p) = pct {
-            return ProbeLine { idx: None, model: None, effort: None, probe: None, verdict: None, note: format!("ASR {p}%") };
+            return ProbeLine {
+                idx: None,
+                model: None,
+                effort: None,
+                probe: None,
+                verdict: None,
+                note: format!("ASR {p}%"),
+            };
         }
     }
-    ProbeLine { idx: None, model: None, effort: None, probe: None, verdict: None, note: t.to_string() }
+    ProbeLine {
+        idx: None,
+        model: None,
+        effort: None,
+        probe: None,
+        verdict: None,
+        note: t.to_string(),
+    }
 }
 
 #[derive(Serialize)]
@@ -195,23 +212,44 @@ pub fn probe_run(
     let cfg = load_config();
     let base = match cfg.get("base") {
         Some(b) if !b.is_empty() => b.clone(),
-        _ => return ProbeStart { ok: false, run_id: None, error: Some("未配置探针 base（右上设置里填）".into()) },
+        _ => {
+            return ProbeStart {
+                ok: false,
+                run_id: None,
+                error: Some("未配置探针 base（右上设置里填）".into()),
+            }
+        }
     };
     let key = match cfg.get("key") {
         Some(k) if !k.is_empty() => k.clone(),
-        _ => return ProbeStart { ok: false, run_id: None, error: Some("未配置探针 key".into()) },
+        _ => {
+            return ProbeStart {
+                ok: false,
+                run_id: None,
+                error: Some("未配置探针 key".into()),
+            }
+        }
     };
     let dir = breaker_dir();
     let script = dir.join("tools").join("probe.py");
     if !script.exists() {
-        return ProbeStart { ok: false, run_id: None, error: Some(format!("找不到 {}", script.display())) };
+        return ProbeStart {
+            ok: false,
+            run_id: None,
+            error: Some(format!("找不到 {}", script.display())),
+        };
     }
-    let python = cfg.get("python").cloned().unwrap_or_else(|| "python".into());
+    let python = cfg
+        .get("python")
+        .cloned()
+        .unwrap_or_else(|| "python".into());
 
     let mut cmd = Command::new(&python);
     cmd.arg(&script)
-        .arg("--variant").arg(&variant)
-        .arg("--group").arg(&group)
+        .arg("--variant")
+        .arg(&variant)
+        .arg("--group")
+        .arg(&group)
         .env("PROBE_BASE", &base)
         .env("PROBE_KEY", &key)
         .stdout(Stdio::piped())
@@ -227,7 +265,13 @@ pub fn probe_run(
     }
     let mut child = match cmd.spawn() {
         Ok(c) => c,
-        Err(e) => return ProbeStart { ok: false, run_id: None, error: Some(format!("启动 python 失败: {e}")) },
+        Err(e) => {
+            return ProbeStart {
+                ok: false,
+                run_id: None,
+                error: Some(format!("启动 python 失败: {e}")),
+            }
+        }
     };
     let stdout = child.stdout.take().unwrap();
     let id = format!("run-{}", chrono_secs());
@@ -242,7 +286,13 @@ pub fn probe_run(
         error: None,
     };
     with_runs(|m| {
-        m.insert(id.clone(), RunInner { child: Some(child), run });
+        m.insert(
+            id.clone(),
+            RunInner {
+                child: Some(child),
+                run,
+            },
+        );
     });
 
     // 读 stdout 的线程：逐行解析推进度；进程退出后找最新 csv/md
@@ -271,7 +321,10 @@ pub fn probe_run(
             r.run.done = true;
             // 进度里的 ASR 行
             r.run.asr = lines.iter().rev().find_map(|l| {
-                l.note.strip_prefix("ASR ").and_then(|x| x.strip_suffix('%')).and_then(|x| x.parse().ok())
+                l.note
+                    .strip_prefix("ASR ")
+                    .and_then(|x| x.strip_suffix('%'))
+                    .and_then(|x| x.parse().ok())
             });
             r.run.lines = lines.clone();
             r.child = None;
@@ -300,13 +353,21 @@ pub fn probe_run(
         let _ = status;
     });
 
-    ProbeStart { ok: true, run_id: Some(id), error: None }
+    ProbeStart {
+        ok: true,
+        run_id: Some(id),
+        error: None,
+    }
 }
 
 /// 轮询进度
 #[command]
 pub fn probe_status(run_id: String) -> Result<ProbeRun, String> {
-    with_runs(|m| m.get(&run_id).map(|r| r.run.clone()).ok_or_else(|| "no such run".to_string()))
+    with_runs(|m| {
+        m.get(&run_id)
+            .map(|r| r.run.clone())
+            .ok_or_else(|| "no such run".to_string())
+    })
 }
 
 /// 读明细 csv（probe.py 落的 probe_detail_*.csv）
@@ -323,11 +384,17 @@ pub fn probe_open_reports() -> Result<(), String> {
     let dir = breaker_dir().join("tools");
     #[cfg(target_os = "windows")]
     {
-        Command::new("explorer").arg(dir).spawn().map_err(|e| e.to_string())?;
+        Command::new("explorer")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| e.to_string())?;
     }
     #[cfg(not(target_os = "windows"))]
     {
-        Command::new("xdg-open").arg(dir).spawn().map_err(|e| e.to_string())?;
+        Command::new("xdg-open")
+            .arg(dir)
+            .spawn()
+            .map_err(|e| e.to_string())?;
     }
     Ok(())
 }

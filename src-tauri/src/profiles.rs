@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use tauri::AppHandle;
 
 use crate::inject::{
-    count_files_pub as count_files, copy_dir_pub as copy_dir, read_text_pub as read_text,
+    copy_dir_pub as copy_dir, count_files_pub as count_files, read_text_pub as read_text,
     write_utf8_no_bom_pub as write_utf8_no_bom, ClientSpec, InjectTarget, InstallReport, WriteMode,
 };
 use crate::runtime::runtime_root;
@@ -316,7 +316,11 @@ fn effective_skill_packs(m: &Manifest) -> Vec<String> {
 /// `choice_file`，且**优先按索引取**。若只过滤列表、不过滤安装里的索引
 /// 基准，索引就会错位 —— 用户选了第 1 份，实际装的是原始列表里的第 1 份
 /// （可能已被删/是另一份），属于静默装错。所以两处都调这个函数。
-fn resolved_prompts(app: &AppHandle, m: &Manifest, version_dir: &Path) -> Vec<(ManifestPrompt, PathBuf)> {
+fn resolved_prompts(
+    app: &AppHandle,
+    m: &Manifest,
+    version_dir: &Path,
+) -> Vec<(ManifestPrompt, PathBuf)> {
     effective_prompts(m)
         .into_iter()
         .filter_map(|p| {
@@ -326,12 +330,20 @@ fn resolved_prompts(app: &AppHandle, m: &Manifest, version_dir: &Path) -> Vec<(M
         .collect()
 }
 
-
 /// 老 PromptRef → 新提示词条目（兼容旧 manifest 兜底路径）
 fn legacy_prompt_entry(pr: &PromptRef) -> ManifestPrompt {
-    let key = pr.asset.clone().or(pr.file.clone()).or(pr.path.clone()).unwrap_or_default();
+    let key = pr
+        .asset
+        .clone()
+        .or(pr.file.clone())
+        .or(pr.path.clone())
+        .unwrap_or_default();
     ManifestPrompt {
-        name: key.split(['/', '\\']).next_back().unwrap_or(&key).to_string(),
+        name: key
+            .split(['/', '\\'])
+            .next_back()
+            .unwrap_or(&key)
+            .to_string(),
         asset: pr.asset.clone(),
         file: pr.file.clone(),
         path: pr.path.clone(),
@@ -353,7 +365,11 @@ fn legacy_prompt_entry(pr: &PromptRef) -> ManifestPrompt {
 /// 恰有同名文件，于是界面照样报「文件存在」，用户看到的路径和状态又对不上。
 /// 位置漂移是用户自己的操作，应该在界面上如实报缺失并让他补，
 /// 而不是靠模糊匹配猜一个「差不多」的文件顶上。
-pub fn resolve_prompt_ref(app: &AppHandle, p: &ManifestPrompt, version_dir: &Path) -> Option<PathBuf> {
+pub fn resolve_prompt_ref(
+    app: &AppHandle,
+    p: &ManifestPrompt,
+    version_dir: &Path,
+) -> Option<PathBuf> {
     let base = assets_root(app);
     if let Some(a) = p.asset.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
         let a = a.replace('\\', "/");
@@ -443,7 +459,11 @@ pub fn profiles_list(app: AppHandle) -> Vec<ProfileEntry> {
 
             out.push(ProfileEntry {
                 id: m.id.clone(),
-                client: if m.client.is_empty() { client_id.clone() } else { m.client.clone() },
+                client: if m.client.is_empty() {
+                    client_id.clone()
+                } else {
+                    m.client.clone()
+                },
                 label: m.label.clone(),
                 desc: m.desc.clone(),
                 recommended: m.recommended,
@@ -453,7 +473,13 @@ pub fn profiles_list(app: AppHandle) -> Vec<ProfileEntry> {
                 // 默认选中那份的路径与存在性，界面初始显示的就是它
                 prompt_file: resolved
                     .get(default_idx)
-                    .map(|(p, _)| p.asset.clone().or(p.file.clone()).or(p.path.clone()).unwrap_or_default())
+                    .map(|(p, _)| {
+                        p.asset
+                            .clone()
+                            .or(p.file.clone())
+                            .or(p.path.clone())
+                            .unwrap_or_default()
+                    })
                     .unwrap_or_default(),
                 default_prompt_index: default_idx,
                 prompt_items: resolved
@@ -523,7 +549,11 @@ pub fn profile_get(app: AppHandle, id: String) -> Result<serde_json::Value, Stri
 
 /// 保存 manifest（新建或修改版本）
 #[tauri::command]
-pub fn profile_save(app: AppHandle, manifest: Manifest, dir_name: Option<String>) -> Result<String, String> {
+pub fn profile_save(
+    app: AppHandle,
+    manifest: Manifest,
+    dir_name: Option<String>,
+) -> Result<String, String> {
     let root = profiles_root(&app);
     let client = if manifest.client.is_empty() {
         "_custom".to_string()
@@ -620,7 +650,11 @@ pub fn profile_install(
 
     // 2) 索引取不到时，用前端直接给的标识再试一次
     if resolved.is_none() {
-        if let Some(cf) = choice_file.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+        if let Some(cf) = choice_file
+            .as_ref()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+        {
             // 可能是 asset 相对路径 / 版本目录内文件名 / 绝对路径，逐个试
             let as_entry = ManifestPrompt {
                 name: cf.rsplit(['/', '\\']).next().unwrap_or(cf).to_string(),
@@ -788,7 +822,12 @@ pub fn profile_open_dir(app: AppHandle, id: String) -> Result<String, String> {
 
 /// 在版本目录内创建资源文件（自定义版本用）
 #[tauri::command]
-pub fn profile_write_asset(app: AppHandle, id: String, rel: String, content: String) -> Result<String, String> {
+pub fn profile_write_asset(
+    app: AppHandle,
+    id: String,
+    rel: String,
+    content: String,
+) -> Result<String, String> {
     let (_, dir) = find_manifest(&app, &id).ok_or_else(|| format!("未找到版本：{id}"))?;
     let target = dir.join(&rel);
     write_utf8_no_bom(&target, &content)?;
@@ -797,7 +836,12 @@ pub fn profile_write_asset(app: AppHandle, id: String, rel: String, content: Str
 
 /// 把源目录复制进版本目录（自定义版本导入技能/提示词）
 #[tauri::command]
-pub fn profile_import(app: AppHandle, id: String, src: String, rel_dest: String) -> Result<String, String> {
+pub fn profile_import(
+    app: AppHandle,
+    id: String,
+    src: String,
+    rel_dest: String,
+) -> Result<String, String> {
     let (_, dir) = find_manifest(&app, &id).ok_or_else(|| format!("未找到版本：{id}"))?;
     let s = PathBuf::from(&src);
     if !s.exists() {
@@ -961,7 +1005,10 @@ fn infer_work_dir(app: &AppHandle, m: &Manifest) -> Option<String> {
         }
         let mut dir = p.parent()?;
         let leaf = dir.file_name().and_then(|s| s.to_str()).unwrap_or("");
-        if matches!(leaf.to_ascii_lowercase().as_str(), "skills" | "rules" | "commands") {
+        if matches!(
+            leaf.to_ascii_lowercase().as_str(),
+            "skills" | "rules" | "commands"
+        ) {
             dir = dir.parent().unwrap_or(dir);
         }
         return Some(dir.display().to_string());
@@ -1071,11 +1118,7 @@ pub fn clients_list(app: AppHandle) -> Vec<ClientEntry> {
     // 按用户自定义顺序排；未记录在 order 里的排在后面（按名字）
     let order = read_clients_order(&app);
     let rank = |id: &str| order.iter().position(|x| x == id).unwrap_or(usize::MAX);
-    out.sort_by(|a, b| {
-        rank(&a.id)
-            .cmp(&rank(&b.id))
-            .then(a.id.cmp(&b.id))
-    });
+    out.sort_by(|a, b| rank(&a.id).cmp(&rank(&b.id)).then(a.id.cmp(&b.id)));
     out
 }
 
@@ -1084,7 +1127,11 @@ pub fn clients_list(app: AppHandle) -> Vec<ClientEntry> {
 /// `work_dir`：客户端工作路径（如 ~/.codex），写进默认预设组的注入位置与技能落点，
 /// 这样新建后马上可用，用户不必再手填路径。
 #[tauri::command]
-pub fn client_create(app: AppHandle, id: String, work_dir: Option<String>) -> Result<String, String> {
+pub fn client_create(
+    app: AppHandle,
+    id: String,
+    work_dir: Option<String>,
+) -> Result<String, String> {
     let id = id.trim().to_string();
     if id.is_empty() {
         return Err("客户端名不能为空".into());
@@ -1287,8 +1334,12 @@ fn sync_client_manifests(app: &AppHandle, id: &str, old_abs: &str, new_backslash
     if let Ok(vs) = std::fs::read_dir(&client_dir) {
         for v in vs.filter_map(|x| x.ok()) {
             let mf = v.path().join("manifest.json");
-            let Ok(txt) = std::fs::read_to_string(&mf) else { continue };
-            let Ok(mut m) = serde_json::from_str::<Manifest>(&txt) else { continue };
+            let Ok(txt) = std::fs::read_to_string(&mf) else {
+                continue;
+            };
+            let Ok(mut m) = serde_json::from_str::<Manifest>(&txt) else {
+                continue;
+            };
             let mut dirty = false;
 
             for t in m.inject_targets.iter_mut() {
@@ -1314,7 +1365,9 @@ fn sync_client_manifests(app: &AppHandle, id: &str, old_abs: &str, new_backslash
             }
 
             if dirty {
-                let Ok(js) = serde_json::to_string_pretty(&m) else { continue };
+                let Ok(js) = serde_json::to_string_pretty(&m) else {
+                    continue;
+                };
                 let tmp = mf.with_extension("json.tmp");
                 if std::fs::write(&tmp, js).is_ok() && std::fs::rename(&tmp, &mf).is_ok() {
                     changed += 1;
@@ -1339,7 +1392,10 @@ pub fn client_config_get(app: AppHandle, id: String) -> Result<ClientConfig, Str
     let entry = clients_list(app.clone()).into_iter().find(|c| c.id == id);
     Ok(ClientConfig {
         id: id.to_string(),
-        label: entry.as_ref().map(|c| c.label.clone()).unwrap_or_else(|| id.to_string()),
+        label: entry
+            .as_ref()
+            .map(|c| c.label.clone())
+            .unwrap_or_else(|| id.to_string()),
         work_dir: entry.map(|c| c.work_dir).unwrap_or_default(),
         notes: String::new(),
     })
@@ -1358,7 +1414,12 @@ pub fn client_config_save(app: AppHandle, config: ClientConfig) -> Result<u32, S
     if !profiles_root(&app).join(&id).is_dir() {
         return Err(format!("客户端不存在：{id}"));
     }
-    let new_wd = config.work_dir.trim().replace('/', "\\").trim_end_matches('\\').to_string();
+    let new_wd = config
+        .work_dir
+        .trim()
+        .replace('/', "\\")
+        .trim_end_matches('\\')
+        .to_string();
     if !new_wd.is_empty() && !Path::new(&new_wd).is_absolute() {
         return Err(format!("工作路径必须是绝对路径（{new_wd}）"));
     }
@@ -1381,7 +1442,10 @@ pub fn client_config_save(app: AppHandle, config: ClientConfig) -> Result<u32, S
     )?;
 
     // 路径真变了才同步 manifest
-    let old_norm = old_abs.replace('/', "\\").trim_end_matches('\\').to_ascii_lowercase();
+    let old_norm = old_abs
+        .replace('/', "\\")
+        .trim_end_matches('\\')
+        .to_ascii_lowercase();
     let new_norm = new_wd.to_ascii_lowercase();
     if old_norm != new_norm && !new_wd.is_empty() {
         return Ok(sync_client_manifests(&app, &id, &old_abs, &new_wd));
@@ -1414,7 +1478,8 @@ mod tests {
         assert_eq!(back.label, c.label);
 
         // 最小文件（只有 id + workDir）：其余字段取默认值
-        let min: ClientConfig = serde_json::from_str(r#"{"id":"pi","workDir":"C:\\x\\.pi"}"#).unwrap();
+        let min: ClientConfig =
+            serde_json::from_str(r#"{"id":"pi","workDir":"C:\\x\\.pi"}"#).unwrap();
         assert_eq!(min.id, "pi");
         assert_eq!(min.work_dir, r"C:\x\.pi");
         assert!(min.label.is_empty());
@@ -1516,7 +1581,12 @@ mod tests {
     #[test]
     fn rewrite_workdir_equal_path_returns_none() {
         // 路径恰好等于旧目录本身（无子路径）：没有可改的部分，保持原样
-        let out = rewrite_workdir_path(r"C:\Users\me\.codex\", r"C:\Users\me\.codex", r"E:\x", r"C:\Users\me");
+        let out = rewrite_workdir_path(
+            r"C:\Users\me\.codex\",
+            r"C:\Users\me\.codex",
+            r"E:\x",
+            r"C:\Users\me",
+        );
         assert_eq!(out, None);
     }
 
@@ -1585,14 +1655,23 @@ mod tests {
         }"#;
         let m: Manifest = serde_json::from_str(js).expect("旧 manifest 应能解析");
         assert!(m.recommended);
-        assert_eq!(m.prompt.as_ref().unwrap().asset.as_deref(), Some("prompts/gpt-6-astra-v1.md"));
-        assert_eq!(m.skills.as_ref().unwrap().asset_pack.as_deref(), Some("codex-skills-v4"));
+        assert_eq!(
+            m.prompt.as_ref().unwrap().asset.as_deref(),
+            Some("prompts/gpt-6-astra-v1.md")
+        );
+        assert_eq!(
+            m.skills.as_ref().unwrap().asset_pack.as_deref(),
+            Some("codex-skills-v4")
+        );
         // 老字段兜底派生：prompts 为空 → 用 prompt 派生一份
         let eff = effective_prompts(&m);
         assert_eq!(eff.len(), 1);
         assert_eq!(eff[0].asset.as_deref(), Some("prompts/gpt-6-astra-v1.md"));
         // 老字段兜底派生：skillPacks 为空 → 用 skills.assetPack 派生
-        assert_eq!(effective_skill_packs(&m), vec!["codex-skills-v4".to_string()]);
+        assert_eq!(
+            effective_skill_packs(&m),
+            vec!["codex-skills-v4".to_string()]
+        );
     }
 
     /// 关键不变量：写回时**绝不能**再输出 choices/prompt/skills/recommended。

@@ -25,14 +25,19 @@ fn board_path() -> std::path::PathBuf {
             return c;
         }
     }
-    std::env::current_dir().unwrap_or_default().join("board.json")
+    std::env::current_dir()
+        .unwrap_or_default()
+        .join("board.json")
 }
 
 #[tauri::command]
 pub async fn board_read() -> Result<BoardRaw, String> {
     let p = board_path();
     match std::fs::read_to_string(&p) {
-        Ok(json) => Ok(BoardRaw { json, path: p.to_string_lossy().into_owned() }),
+        Ok(json) => Ok(BoardRaw {
+            json,
+            path: p.to_string_lossy().into_owned(),
+        }),
         Err(e) => Err(format!("{}: {}", p.display(), e)),
     }
 }

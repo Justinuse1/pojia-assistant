@@ -21,9 +21,13 @@ pub struct ReportData {
 }
 
 fn breaker_tools() -> std::path::PathBuf {
-    let home = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")).unwrap_or_default();
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_default();
     let p = std::path::PathBuf::from(format!("{home}\\pojia-breaker\\tools"));
-    if p.exists() { return p; }
+    if p.exists() {
+        return p;
+    }
     std::path::PathBuf::from("C:\\Users\\53241\\pojia-breaker\\tools")
 }
 
@@ -36,17 +40,20 @@ pub async fn report_scan() -> Result<ReportData, String> {
             .filter_map(|e| e.ok())
             .map(|e| e.path())
             .filter(|p| {
-                p.file_name()
-                    .map_or(false, |n| {
-                        let s = n.to_string_lossy();
-                        s.starts_with("probe_report_") && s.ends_with(".md")
-                    })
+                p.file_name().map_or(false, |n| {
+                    let s = n.to_string_lossy();
+                    s.starts_with("probe_report_") && s.ends_with(".md")
+                })
             })
             .collect();
         files.sort();
         for p in files.iter().rev().take(20) {
             let text = std::fs::read_to_string(p).unwrap_or_default();
-            let name = p.file_name().unwrap_or_default().to_string_lossy().into_owned();
+            let name = p
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned();
             let time = text
                 .lines()
                 .find(|l| l.contains("20") && l.trim_start_matches('#').len() < 60)
@@ -80,10 +87,14 @@ pub async fn report_scan() -> Result<ReportData, String> {
     }
     // 弹药库统计(只读; ammo.rs 的库)
     let (mut ammo_count, mut ammo_verified) = (0u32, 0u32);
-    let home = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")).unwrap_or_default();
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_default();
     let db = std::path::PathBuf::from(format!("{home}\\.dsh\\ammo-knowledge.db"));
     if db.exists() {
-        if let Ok(con) = rusqlite::Connection::open_with_flags(&db, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY) {
+        if let Ok(con) =
+            rusqlite::Connection::open_with_flags(&db, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+        {
             let q = |sql: &str| -> u32 {
                 con.query_row(sql, [], |r| r.get::<_, i64>(0)).unwrap_or(0) as u32
             };
@@ -91,7 +102,11 @@ pub async fn report_scan() -> Result<ReportData, String> {
             ammo_verified = q("SELECT COALESCE(SUM(verified),0) FROM poc");
         }
     }
-    Ok(ReportData { reports, ammo_count, ammo_verified })
+    Ok(ReportData {
+        reports,
+        ammo_count,
+        ammo_verified,
+    })
 }
 
 /// 战报生成: 汇聚最新报告+弹药库 → markdown 存到桌面
@@ -99,17 +114,30 @@ pub async fn report_scan() -> Result<ReportData, String> {
 pub async fn report_generate() -> Result<String, String> {
     let data = report_scan().await?;
     let mut md = String::from("# POJIA.AI 战报\n\n");
-    md.push_str(&format!("生成时间: {} | 弹药库: {} 条 ({} 已验证)\n\n", 
-        chrono_now(), data.ammo_count, data.ammo_verified));
+    md.push_str(&format!(
+        "生成时间: {} | 弹药库: {} 条 ({} 已验证)\n\n",
+        chrono_now(),
+        data.ammo_count,
+        data.ammo_verified
+    ));
     md.push_str("## 探针战果\n\n| 报告 | 模型 | 变体 | 挡位 | ASR | PASS/FAIL |\n|---|---|---|---|---|---|\n");
     for r in &data.reports {
         md.push_str(&format!(
             "| {} | {} | {} | {} | {} | {}/{} |\n",
-            r.file.trim_start_matches("probe_report_").trim_end_matches(".md"),
-            r.model, r.variant, r.tiers, r.asr, r.pass_count, r.fail_count
+            r.file
+                .trim_start_matches("probe_report_")
+                .trim_end_matches(".md"),
+            r.model,
+            r.variant,
+            r.tiers,
+            r.asr,
+            r.pass_count,
+            r.fail_count
         ));
     }
-    let home = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")).unwrap_or_default();
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_default();
     let out = std::path::PathBuf::from(format!("{home}\\Desktop\\pojia-战报-{}.md", stamp()));
     std::fs::write(&out, &md).map_err(|e| e.to_string())?;
     Ok(out.to_string_lossy().into_owned())
@@ -117,7 +145,11 @@ pub async fn report_generate() -> Result<String, String> {
 
 fn chrono_now() -> String {
     std::process::Command::new("powershell")
-        .args(["-NoProfile", "-Command", "Get-Date -Format 'yyyy-MM-dd HH:mm'"])
+        .args([
+            "-NoProfile",
+            "-Command",
+            "Get-Date -Format 'yyyy-MM-dd HH:mm'",
+        ])
         .output()
         .ok()
         .and_then(|o| String::from_utf8(o.stdout).ok())

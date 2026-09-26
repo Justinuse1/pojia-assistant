@@ -19,7 +19,7 @@ use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 
 use crate::inject::{
-    count_files_pub as count_files, copy_dir_pub as copy_dir,
+    copy_dir_pub as copy_dir, count_files_pub as count_files,
     parse_skill_frontmatter_pub as parse_skill_frontmatter, shipped_skill_pack_root,
     write_utf8_no_bom_pub as write_utf8_no_bom,
 };
@@ -175,7 +175,11 @@ pub fn pick_one_folder(
 ) -> Option<String> {
     let mut dlg = app.dialog().file();
     dlg = dlg.set_title(title.unwrap_or_else(|| "选择文件夹".into()));
-    if let Some(d) = start_dir.as_ref().map(|s| expand_dir(s)).filter(|p| p.is_dir()) {
+    if let Some(d) = start_dir
+        .as_ref()
+        .map(|s| expand_dir(s))
+        .filter(|p| p.is_dir())
+    {
         dlg = dlg.set_directory(d);
     }
     dlg.blocking_pick_folder()
@@ -215,7 +219,11 @@ pub fn pick_one_file(
 ) -> Option<String> {
     let mut dlg = app.dialog().file();
     dlg = dlg.set_title(title.unwrap_or_else(|| "选择文件".into()));
-    if let Some(d) = start_dir.as_ref().map(|s| expand_dir(s)).filter(|p| p.is_dir()) {
+    if let Some(d) = start_dir
+        .as_ref()
+        .map(|s| expand_dir(s))
+        .filter(|p| p.is_dir())
+    {
         dlg = dlg.set_directory(d);
     }
     if let Some(n) = default_name.as_ref().filter(|s| !s.trim().is_empty()) {
@@ -301,10 +309,7 @@ pub fn import_skill_multi(
             src.clone()
         };
 
-        let Some(name) = unit
-            .file_name()
-            .map(|s| s.to_string_lossy().to_string())
-        else {
+        let Some(name) = unit.file_name().map(|s| s.to_string_lossy().to_string()) else {
             continue;
         };
         if name.is_empty() {
@@ -379,18 +384,27 @@ fn collect_md(dir: &Path, root: &Path, depth: usize, out: &mut Vec<(PathBuf, Str
     if depth > MAX_DEPTH || out.len() >= MAX_SKILLS {
         return;
     }
-    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return;
+    };
     let mut entries: Vec<PathBuf> = rd.filter_map(|e| e.ok()).map(|e| e.path()).collect();
     entries.sort();
     for p in entries {
-        let name = p.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+        let name = p
+            .file_name()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_default();
         if p.is_dir() {
             // 点开头目录（.git/.import-tmp/…）与 node_modules 里不会有用户提示词
             if name.starts_with('.') || name == "node_modules" {
                 continue;
             }
             collect_md(&p, root, depth + 1, out);
-        } else if p.extension().map(|e| e.eq_ignore_ascii_case("md")).unwrap_or(false) {
+        } else if p
+            .extension()
+            .map(|e| e.eq_ignore_ascii_case("md"))
+            .unwrap_or(false)
+        {
             let rel = p
                 .strip_prefix(root)
                 .map(|r| r.display().to_string().replace('\\', "/"))
@@ -438,16 +452,27 @@ pub fn import_prompt_multi(
             if local.is_empty() {
                 skipped.push(format!(
                     "{} 下没找到 .md 文件",
-                    p.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default()
+                    p.file_name()
+                        .map(|s| s.to_string_lossy().to_string())
+                        .unwrap_or_default()
                 ));
             }
-        } else if p.extension().map(|e| e.eq_ignore_ascii_case("md")).unwrap_or(false) {
-            let name = p.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+        } else if p
+            .extension()
+            .map(|e| e.eq_ignore_ascii_case("md"))
+            .unwrap_or(false)
+        {
+            let name = p
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default();
             local.push((p.clone(), name));
         } else {
             skipped.push(format!(
                 "不是 .md，已跳过：{}",
-                p.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default()
+                p.file_name()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_default()
             ));
             continue;
         }
@@ -525,4 +550,3 @@ pub fn import_prompt_multi(
         temp_cleaned: true,
     })
 }
-

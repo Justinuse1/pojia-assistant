@@ -16,8 +16,13 @@ fn relays_path() -> std::path::PathBuf {
     let mut p = cwd.clone();
     for _ in 0..6 {
         let c = p.join("src-tauri").join("relays.json");
-        if c.exists() { return c; }
-        p = match p.parent() { Some(x) => x.to_path_buf(), None => break };
+        if c.exists() {
+            return c;
+        }
+        p = match p.parent() {
+            Some(x) => x.to_path_buf(),
+            None => break,
+        };
     }
     cwd.join("src-tauri").join("relays.json")
 }
@@ -72,10 +77,26 @@ pub async fn speedtest_run() -> Result<Vec<RelayResult>, String> {
     let mut jobs: Vec<(String, String, String, String)> = Vec::new();
     if let Some(relays) = cfg.get("relays").and_then(|v| v.as_array()) {
         for r in relays {
-            let name = r.get("name").and_then(|v| v.as_str()).unwrap_or("?").to_string();
-            let base = r.get("base").and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let key = r.get("key").and_then(|v| v.as_str()).unwrap_or("").to_string();
-            for m in r.get("models").and_then(|v| v.as_array()).unwrap_or(&vec![]) {
+            let name = r
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or("?")
+                .to_string();
+            let base = r
+                .get("base")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let key = r
+                .get("key")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            for m in r
+                .get("models")
+                .and_then(|v| v.as_array())
+                .unwrap_or(&vec![])
+            {
                 if let Some(m) = m.as_str() {
                     jobs.push((name.clone(), base.clone(), key.clone(), m.to_string()));
                 }
@@ -83,7 +104,9 @@ pub async fn speedtest_run() -> Result<Vec<RelayResult>, String> {
         }
     }
     let handle = tauri::async_runtime::spawn_blocking(move || {
-        jobs.iter().map(|(n, b, k, m)| probe_relay_sync(n, b, k, m)).collect::<Vec<_>>()
+        jobs.iter()
+            .map(|(n, b, k, m)| probe_relay_sync(n, b, k, m))
+            .collect::<Vec<_>>()
     });
     handle.await.map_err(|e| e.to_string())
 }

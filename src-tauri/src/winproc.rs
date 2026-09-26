@@ -202,7 +202,9 @@ pub fn create_kill_on_close_job() -> Option<Job> {
 pub fn assign_pid(job: &Job, pid: u32) -> bool {
     unsafe {
         let p = ffi::OpenProcess(
-            ffi::PROCESS_TERMINATE | ffi::PROCESS_SET_QUOTA | ffi::PROCESS_QUERY_LIMITED_INFORMATION,
+            ffi::PROCESS_TERMINATE
+                | ffi::PROCESS_SET_QUOTA
+                | ffi::PROCESS_QUERY_LIMITED_INFORMATION,
             0,
             pid,
         );
@@ -502,8 +504,16 @@ pub fn spawn_new_console(
 ) -> Result<u32, String> {
     use std::os::windows::ffi::OsStrExt;
 
-    let exe_w: Vec<u16> = exe.as_os_str().encode_wide().chain(std::iter::once(0)).collect();
-    let cwd_w: Vec<u16> = cwd.as_os_str().encode_wide().chain(std::iter::once(0)).collect();
+    let exe_w: Vec<u16> = exe
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let cwd_w: Vec<u16> = cwd
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
 
     // lpApplicationName 给全路径，参数从 argv[1] 开始拼
     let mut cmdline = quote_arg(&exe.display().to_string());
@@ -653,7 +663,11 @@ pub fn descendants(root_pid: u32) -> Vec<u32> {
 
 /// 路径前缀判定（大小写不敏感；`\` 与 `/` 等价）
 fn path_under(path: &str, root: &str) -> bool {
-    let norm = |s: &str| s.replace('/', "\\").trim_end_matches('\\').to_ascii_lowercase();
+    let norm = |s: &str| {
+        s.replace('/', "\\")
+            .trim_end_matches('\\')
+            .to_ascii_lowercase()
+    };
     let p = norm(path);
     let r = norm(root);
     if r.is_empty() {
@@ -668,7 +682,11 @@ pub fn pids_under_root(root: &str) -> Vec<u32> {
     snapshot()
         .into_iter()
         .filter(|r| r.pid != me && r.pid > 4)
-        .filter(|r| image_path(r.pid).map(|p| path_under(&p, root)).unwrap_or(false))
+        .filter(|r| {
+            image_path(r.pid)
+                .map(|p| path_under(&p, root))
+                .unwrap_or(false)
+        })
         .map(|r| r.pid)
         .collect()
 }
@@ -699,7 +717,9 @@ pub fn sweep_root(root: &str) -> (Vec<u32>, Vec<u32>) {
             if row.pid == me || row.pid <= 4 {
                 continue;
             }
-            let Some(img) = image_path(row.pid) else { continue };
+            let Some(img) = image_path(row.pid) else {
+                continue;
+            };
             if !path_under(&img, root) {
                 continue;
             }
@@ -728,7 +748,9 @@ pub fn sweep_root_orphans(root: &str) -> Vec<u32> {
         if !is_orphan(&rows, row.pid, row.ppid) {
             continue;
         }
-        let Some(img) = image_path(row.pid) else { continue };
+        let Some(img) = image_path(row.pid) else {
+            continue;
+        };
         if !path_under(&img, root) {
             continue;
         }
@@ -749,7 +771,9 @@ pub fn sweep_root_orphans(root: &str) -> Vec<u32> {
             if !is_orphan(&rows2, row.pid, row.ppid) {
                 continue;
             }
-            let Some(img) = image_path(row.pid) else { continue };
+            let Some(img) = image_path(row.pid) else {
+                continue;
+            };
             if path_under(&img, root) && terminate_pid(row.pid) {
                 killed.push(row.pid);
             }
@@ -809,7 +833,10 @@ mod tests {
         // 不能把同名前缀的兄弟目录吞进来（resources2 不是 resources 的子目录）
         assert!(!path_under("C:\\x\\resources2\\a.exe", "C:\\x\\resources"));
         // 主程序自己在 resources 之外，绝不能被顺手杀掉
-        assert!(!path_under("F:\\重构ui\\pojia-assistant\\pojia-assistant.exe", "F:\\重构ui\\pojia-assistant\\resources"));
+        assert!(!path_under(
+            "F:\\重构ui\\pojia-assistant\\pojia-assistant.exe",
+            "F:\\重构ui\\pojia-assistant\\resources"
+        ));
         assert!(!path_under("C:\\x\\resources", ""));
     }
 
@@ -852,10 +879,16 @@ mod tests {
 
         // 先确认它确实被识别为「root 下的进程」
         let found = pids_under_root(&root.display().to_string());
-        assert!(found.contains(&pid), "应识别出 root 下的进程，实际 {found:?}");
+        assert!(
+            found.contains(&pid),
+            "应识别出 root 下的进程，实际 {found:?}"
+        );
 
         let (killed, remaining) = sweep_root(&root.display().to_string());
-        assert!(killed.contains(&pid), "清扫应杀掉 {pid}，实际 killed={killed:?}");
+        assert!(
+            killed.contains(&pid),
+            "清扫应杀掉 {pid}，实际 killed={killed:?}"
+        );
         assert!(remaining.is_empty(), "清扫后不该有残留：{remaining:?}");
 
         // 收尾：确认真的退出了（try_wait 返回 Some 即已退出）
@@ -877,7 +910,10 @@ mod tests {
         let rows = snapshot();
         if cfg!(windows) {
             assert!(!rows.is_empty(), "Windows 上快照不应为空");
-            assert!(rows.iter().any(|r| r.pid == self_pid()), "快照里应能找到自己");
+            assert!(
+                rows.iter().any(|r| r.pid == self_pid()),
+                "快照里应能找到自己"
+            );
         }
     }
 }

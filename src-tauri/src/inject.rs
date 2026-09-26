@@ -66,9 +66,9 @@ pub struct VersionSpec {
     pub skill_source: Option<String>,
 }
 
+pub use self::helpers::copy_dir as copy_dir_pub;
 /// 供 profiles.rs / import_skill.rs 复用：递归统计文件数
 pub use self::helpers::count_files as count_files_pub;
-pub use self::helpers::copy_dir as copy_dir_pub;
 pub use self::helpers::read_text as read_text_pub;
 pub use self::helpers::write_utf8_no_bom as write_utf8_no_bom_pub;
 /// 供 import_skill.rs 复用：解析 SKILL.md frontmatter
@@ -420,7 +420,9 @@ fn civil_from_days(z: i64) -> (i64, u32, u32) {
 
 /// 时间戳备份保留最近 N 份；固定名备份永不清理
 fn prune_backups(dir: &Path, stem: &str) {
-    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return;
+    };
     let re = Regex::new(r"\d{8}-\d{6}").ok();
     let mut stamped: Vec<(String, PathBuf)> = Vec::new();
     for e in rd.filter_map(|e| e.ok()) {
@@ -499,7 +501,14 @@ fn find_block(text: &str, begin_key: &str, end_key: &str) -> Option<(usize, usiz
 }
 
 /// 标记块写入：有块→只换块内（保留用户内容）；无块→追加
-pub fn apply_block(existing: &str, begin_key: &str, end_key: &str, begin: &str, end: &str, body: &str) -> (String, bool) {
+pub fn apply_block(
+    existing: &str,
+    begin_key: &str,
+    end_key: &str,
+    begin: &str,
+    end: &str,
+    body: &str,
+) -> (String, bool) {
     let block = format!("{begin}\n{}\n{end}", body.trim_end());
     if let Some((s, e)) = find_block(existing, begin_key, end_key) {
         let mut out = String::new();
@@ -566,7 +575,13 @@ pub fn is_injection_artifact(text: &str) -> bool {
 // 模板渲染 + 头部元数据剥离
 // ============================================================
 
-pub fn expand_template(text: &str, channel: &str, label: &str, skills_root: &str, modules_root: &str) -> String {
+pub fn expand_template(
+    text: &str,
+    channel: &str,
+    label: &str,
+    skills_root: &str,
+    modules_root: &str,
+) -> String {
     text.replace("{{CHANNEL_LABEL}}", label)
         .replace("{{CHANNEL}}", channel)
         .replace("{{SKILLS_ROOT}}", &skills_root.replace('\\', "/"))
@@ -621,7 +636,11 @@ fn skill_current(src: &Path, dest: &Path) -> bool {
     let dt = dm.modified().ok();
     match (st, dt) {
         (Some(a), Some(b)) => {
-            let diff = if a > b { a.duration_since(b) } else { b.duration_since(a) };
+            let diff = if a > b {
+                a.duration_since(b)
+            } else {
+                b.duration_since(a)
+            };
             diff.map(|d| d.as_secs() <= 2).unwrap_or(false)
         }
         _ => false,
@@ -704,7 +723,10 @@ fn sync_skills(
 
 fn copy_dir(src: &Path, dest: &Path) -> Result<(), String> {
     std::fs::create_dir_all(dest).map_err(|e| e.to_string())?;
-    for e in std::fs::read_dir(src).map_err(|e| e.to_string())?.filter_map(|e| e.ok()) {
+    for e in std::fs::read_dir(src)
+        .map_err(|e| e.to_string())?
+        .filter_map(|e| e.ok())
+    {
         let p = e.path();
         let target = dest.join(e.file_name());
         if p.is_dir() {
@@ -819,8 +841,9 @@ fn prepare_skill_dest(dest: &Path, steps: &mut Vec<String>) -> Result<(), String
             Err(_) => {
                 // 客户端占用导致改名失败 → 建 bak 并把内容搬进去。
                 // 目录本身保持原位（它被占用，删不掉也不能改名）。
-                let n = move_contents(dest, &bak)
-                    .map_err(|e| format!("备份 {} 内容到 {} 失败：{e}", dest.display(), bak.display()))?;
+                let n = move_contents(dest, &bak).map_err(|e| {
+                    format!("备份 {} 内容到 {} 失败：{e}", dest.display(), bak.display())
+                })?;
                 steps.push(format!(
                     "原技能目录内容已移入 {}（{} 项 · 目录被客户端占用，无法整体改名）",
                     bak.display(),
@@ -840,7 +863,10 @@ fn prepare_skill_dest(dest: &Path, steps: &mut Vec<String>) -> Result<(), String
 fn copy_dir_merge(src: &Path, dest: &Path) -> Result<usize, String> {
     std::fs::create_dir_all(dest).map_err(|e| format!("{}: {e}", dest.display()))?;
     let mut n = 0usize;
-    for e in std::fs::read_dir(src).map_err(|e| format!("{}: {e}", src.display()))?.filter_map(|e| e.ok()) {
+    for e in std::fs::read_dir(src)
+        .map_err(|e| format!("{}: {e}", src.display()))?
+        .filter_map(|e| e.ok())
+    {
         let p = e.path();
         let target = dest.join(e.file_name());
         if p.is_dir() {
@@ -895,13 +921,20 @@ fn place_one_file(src: &Path, dest: &Path, readonly: bool) -> Result<String, Str
         }
     }
 
-    std::fs::copy(src, &target).map_err(|e| format!("{} → {}: {e}", src.display(), target.display()))?;
+    std::fs::copy(src, &target)
+        .map_err(|e| format!("{} → {}: {e}", src.display(), target.display()))?;
 
     if readonly {
         set_readonly(&target, true)?;
-        Ok(format!("{} 字节 · 已设只读", std::fs::metadata(&target).map(|m| m.len()).unwrap_or(0)))
+        Ok(format!(
+            "{} 字节 · 已设只读",
+            std::fs::metadata(&target).map(|m| m.len()).unwrap_or(0)
+        ))
     } else {
-        Ok(format!("{} 字节", std::fs::metadata(&target).map(|m| m.len()).unwrap_or(0)))
+        Ok(format!(
+            "{} 字节",
+            std::fs::metadata(&target).map(|m| m.len()).unwrap_or(0)
+        ))
     }
 }
 
@@ -931,7 +964,10 @@ fn set_readonly_tree(root: &Path, on: bool) -> Result<usize, String> {
     if !root.is_dir() {
         return Ok(0);
     }
-    for e in std::fs::read_dir(root).map_err(|e| format!("{}: {e}", root.display()))?.filter_map(|e| e.ok()) {
+    for e in std::fs::read_dir(root)
+        .map_err(|e| format!("{}: {e}", root.display()))?
+        .filter_map(|e| e.ok())
+    {
         let p = e.path();
         if p.is_dir() {
             n += set_readonly_tree(&p, on)?;
@@ -1124,7 +1160,11 @@ pub fn inject_status(app: AppHandle, client: ClientSpec) -> Vec<TargetStatus> {
     let skill_dirs: std::collections::HashSet<String> =
         st.skill_dirs.iter().map(|s| s.clone()).collect();
 
-    for t in client.inject_targets.iter().filter(|t| t.mode != WriteMode::Dir) {
+    for t in client
+        .inject_targets
+        .iter()
+        .filter(|t| t.mode != WriteMode::Dir)
+    {
         let p = expand_path(&app, &t.path);
         let txt = read_text(&p);
         // 统一「整份接管」后，判定注入是否生效只看产物标记
@@ -1299,7 +1339,11 @@ pub fn inject_install(
             "key": "prompt",
             "label": "读取提示词",
         }));
-        for t in client.inject_targets.iter().filter(|t| t.mode != WriteMode::Dir) {
+        for t in client
+            .inject_targets
+            .iter()
+            .filter(|t| t.mode != WriteMode::Dir)
+        {
             plan.push(serde_json::json!({
                 "key": format!("target:{}", t.path),
                 "label": format!("提示词 → {}", t.path),
@@ -1365,7 +1409,13 @@ pub fn inject_install(
         .map(|m| expand_path(&app, m).display().to_string())
         .unwrap_or_default();
     let stripped = strip_metadata(&raw);
-    let body = expand_template(&stripped, &client.id, &client.name, &skills_root, &modules_root);
+    let body = expand_template(
+        &stripped,
+        &client.id,
+        &client.name,
+        &skills_root,
+        &modules_root,
+    );
     if let Some(left) = has_unrendered(&body) {
         return report_err(steps, format!("模板渲染残留未展开变量：{left}"));
     }
@@ -1382,7 +1432,11 @@ pub fn inject_install(
     // 卸载时无法干净还原，现在一律整份接管。
     let mut injected_files: Vec<InjectedFile> = Vec::new();
     // 只写提示词落点。dir 型是第三方文件夹对，绝不能把提示词正文写进去。
-    for t in client.inject_targets.iter().filter(|t| t.mode != WriteMode::Dir) {
+    for t in client
+        .inject_targets
+        .iter()
+        .filter(|t| t.mode != WriteMode::Dir)
+    {
         let target = expand_path(&app, &t.path);
         let existing = read_text(&target);
         let bak = PathBuf::from(format!("{}{}", target.display(), BAK_SUFFIX));
@@ -1401,10 +1455,7 @@ pub fn inject_install(
                 steps.push(format!("目标已是注入内容，直接覆盖：{}", target.display()));
             } else if bak.exists() {
                 // 原始备份已在，别再覆盖它（备份只留最初那一份）
-                steps.push(format!(
-                    "原文件已存在备份，保留之：{}",
-                    bak.display()
-                ));
+                steps.push(format!("原文件已存在备份，保留之：{}", bak.display()));
             } else {
                 if let Some(d) = target.parent() {
                     let _ = std::fs::create_dir_all(d);
@@ -1434,7 +1485,12 @@ pub fn inject_install(
         let content = if fm.trim().is_empty() {
             format!("{}{}\n", managed_header(&client.id), body.trim_end())
         } else {
-            format!("{}{}\n{}\n", managed_header(&client.id), fm.trim_end(), body.trim_end())
+            format!(
+                "{}{}\n{}\n",
+                managed_header(&client.id),
+                fm.trim_end(),
+                body.trim_end()
+            )
         };
         if let Err(e) = write_utf8_no_bom(&target, &content) {
             return report_err(steps, e);
@@ -1556,7 +1612,11 @@ pub fn inject_install(
                         Err(e) => {
                             failed.push(format!("技能同步失败：{e}"));
                             steps.push(format!("技能同步失败：{e}"));
-                            progress!(format!("skill:{}", label), &format!("技能包 {label}"), false);
+                            progress!(
+                                format!("skill:{}", label),
+                                &format!("技能包 {label}"),
+                                false
+                            );
                         }
                     }
                 }
@@ -1620,9 +1680,8 @@ pub fn inject_install(
             place_one_file(&src, &dest, tp.readonly)
                 .map(|what| format!("{who} {} → {}（{what}）", src.display(), dest.display()))
         } else {
-            copy_dir_merge(&src, &dest).map(|n| {
-                format!("{who} {} → {}（{} 项）", src.display(), dest.display(), n)
-            })
+            copy_dir_merge(&src, &dest)
+                .map(|n| format!("{who} {} → {}（{} 项）", src.display(), dest.display(), n))
         };
 
         match res {
@@ -1676,7 +1735,11 @@ pub fn inject_install(
             Err(e) => {
                 failed.push(format!("{who} 复制失败：{e}"));
                 steps.push(format!("{who} 复制失败：{e}"));
-                progress!(format!("third:{}", tp.dest), &format!("{who} → {}", tp.dest), false);
+                progress!(
+                    format!("third:{}", tp.dest),
+                    &format!("{who} → {}", tp.dest),
+                    false
+                );
             }
         }
     }
@@ -1713,11 +1776,7 @@ pub fn inject_install(
         steps,
         skills_installed: installed_skills,
         skills_skipped: skipped_total,
-        error: if ok {
-            None
-        } else {
-            Some(failed.join("；"))
-        },
+        error: if ok { None } else { Some(failed.join("；")) },
     }
 }
 
@@ -1781,7 +1840,6 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
         );
     }
 
-
     // 卸载 = 删除本次注入放进去的内容 + 把 `<路径>-bak` 改回原名。
     //
     // 安全性靠字节数比对：只有「当前文件大小 == 注入时记录的大小」才认为
@@ -1795,7 +1853,11 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
     // 兼容没有 injectedFiles 记录的旧状态：退回按注入目标逐个处理
     // （同样要排除 dir 型 —— 那是第三方目录，不是我们写进去的文件，不能删）
     if targets.is_empty() {
-        for t in client.inject_targets.iter().filter(|t| t.mode != WriteMode::Dir) {
+        for t in client
+            .inject_targets
+            .iter()
+            .filter(|t| t.mode != WriteMode::Dir)
+        {
             targets.push((expand_path(&app, &t.path).display().to_string(), None));
         }
     }
@@ -1807,7 +1869,9 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
             // 文件不在，但备份还在 → 还是把原文件还原回去
             if bak.exists() {
                 match std::fs::rename(&bak, &target) {
-                    Ok(()) => steps.push(format!("文件已不在，从备份还原原名：{}", target.display())),
+                    Ok(()) => {
+                        steps.push(format!("文件已不在，从备份还原原名：{}", target.display()))
+                    }
                     Err(e) => failed.push(format!("还原失败 {}：{e}", target.display())),
                 }
             } else {
@@ -1827,18 +1891,28 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
             failed.push(format!(
                 "{} 已被修改（当前 {cur} 字节，注入时 {} 字节），保留不动",
                 target.display(),
-                expect_size.map(|s| s.to_string()).unwrap_or_else(|| "未记录".into())
+                expect_size
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| "未记录".into())
             ));
             continue;
         }
 
         if let Err(e) = std::fs::remove_file(&target) {
             failed.push(format!("删除失败 {}：{e}", target.display()));
-            progress!(format!("file:{}", path).as_str(), &format!("移除 {}", target.display()), false);
+            progress!(
+                format!("file:{}", path).as_str(),
+                &format!("移除 {}", target.display()),
+                false
+            );
             continue;
         }
         steps.push(format!("已删除注入内容：{}", target.display()));
-        progress!(format!("file:{}", path).as_str(), &format!("移除 {}", target.display()), true);
+        progress!(
+            format!("file:{}", path).as_str(),
+            &format!("移除 {}", target.display()),
+            true
+        );
 
         if restore_backup && bak.exists() {
             match std::fs::rename(&bak, &target) {
@@ -1876,7 +1950,10 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
             skills_step_done = true;
             for n in &st.installed_skills {
                 let sk = dest_root.join(n);
-                if sk.is_dir() && sk.join("SKILL.md").exists() && std::fs::remove_dir_all(&sk).is_ok() {
+                if sk.is_dir()
+                    && sk.join("SKILL.md").exists()
+                    && std::fs::remove_dir_all(&sk).is_ok()
+                {
                     removed += 1;
                 }
             }
@@ -1927,7 +2004,11 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
                             "技能目录已还原：{}（{} 项{}）",
                             dest_root.display(),
                             n,
-                            if leftover { " · 目录被占用，内容已合并回原位" } else { "" }
+                            if leftover {
+                                " · 目录被占用，内容已合并回原位"
+                            } else {
+                                ""
+                            }
                         ));
                         // 搬空后的 bak 清掉，避免下次误判「已有备份」
                         let _ = std::fs::remove_dir_all(&bak);
@@ -1958,7 +2039,11 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
             "skills",
             &format!(
                 "清理技能 {}",
-                if removed > 0 { format!("{removed} 个") } else { "（无）".into() }
+                if removed > 0 {
+                    format!("{removed} 个")
+                } else {
+                    "（无）".into()
+                }
             ),
             true
         );
@@ -2002,7 +2087,11 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
         if !p.exists() {
             // 已经被前一步（或用户）删掉了 —— 仍然要把这一行标记完成，
             // 否则进度弹窗里永远停在「待办」
-            progress!(format!("third:{}", item.path).as_str(), &format!("移除 {}", p.display()), true);
+            progress!(
+                format!("third:{}", item.path).as_str(),
+                &format!("移除 {}", p.display()),
+                true
+            );
             continue;
         }
 
@@ -2059,10 +2148,18 @@ pub fn inject_uninstall(app: AppHandle, client: ClientSpec, restore_backup: bool
         if done {
             tp_removed += 1;
             steps.push(format!("已移除第三方内容：{}", p.display()));
-            progress!(format!("third:{}", item.path).as_str(), &format!("移除 {}", p.display()), true);
+            progress!(
+                format!("third:{}", item.path).as_str(),
+                &format!("移除 {}", p.display()),
+                true
+            );
         } else {
             failed.push(format!("第三方内容删除失败：{}", p.display()));
-            progress!(format!("third:{}", item.path).as_str(), &format!("移除 {}", p.display()), false);
+            progress!(
+                format!("third:{}", item.path).as_str(),
+                &format!("移除 {}", p.display()),
+                false
+            );
         }
     }
     if tp_removed > 0 {
@@ -2317,7 +2414,13 @@ pub fn save_pack_meta(app: AppHandle, pack: String, meta: PackMeta) -> Result<()
 pub fn create_skill_pack(app: AppHandle, id: String, title: String) -> Result<String, String> {
     let clean: String = id
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '-' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect();
     if clean.is_empty() {
         return Err("包名不能为空".into());
@@ -2328,7 +2431,11 @@ pub fn create_skill_pack(app: AppHandle, id: String, title: String) -> Result<St
     }
     std::fs::create_dir_all(dir.join("skills")).map_err(|e| e.to_string())?;
     let meta = PackMeta {
-        title: if title.is_empty() { clean.clone() } else { title },
+        title: if title.is_empty() {
+            clean.clone()
+        } else {
+            title
+        },
         desc: String::new(),
         custom: true,
     };
@@ -2406,7 +2513,9 @@ pub struct PromptItem {
 }
 
 fn scan_prompts_in(dir: &Path, source: &str, out: &mut Vec<PromptItem>) {
-    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return;
+    };
     for e in rd.filter_map(|e| e.ok()) {
         let p = e.path();
         if !p.is_file() || p.extension().map(|x| x != "md").unwrap_or(true) {
@@ -2475,7 +2584,10 @@ pub fn list_codex_prompts(app: AppHandle) -> Vec<CodexPromptOption> {
     let dir = runtime_root(&app).join(".codex/prompts");
     let cfg = runtime_root(&app).join(".codex/config.toml");
     let active = {
-        let v = crate::runtime::toml_scalar(&std::fs::read_to_string(&cfg).unwrap_or_default(), "model_instructions_file");
+        let v = crate::runtime::toml_scalar(
+            &std::fs::read_to_string(&cfg).unwrap_or_default(),
+            "model_instructions_file",
+        );
         let v = v.trim_start_matches("./").replace('\\', "/");
         v.rsplit('/').next().unwrap_or("").to_string()
     };
@@ -2485,7 +2597,10 @@ pub fn list_codex_prompts(app: AppHandle) -> Vec<CodexPromptOption> {
             let p = e.path();
             let name = e.file_name().to_string_lossy().to_string();
             // 只收 .md，跳过编辑备份（.bak-edit-*）
-            if !p.is_file() || p.extension().map(|x| x != "md").unwrap_or(true) || name.contains(".bak") {
+            if !p.is_file()
+                || p.extension().map(|x| x != "md").unwrap_or(true)
+                || name.contains(".bak")
+            {
                 continue;
             }
             out.push(CodexPromptOption {
@@ -2555,8 +2670,8 @@ pub fn inject_codex_prompt(app: AppHandle, name: String) -> Result<String, Strin
         return Err(format!("提示词不存在：{}", target.display()));
     }
     let cfg_path = home.join("config.toml");
-    let text = std::fs::read_to_string(&cfg_path)
-        .map_err(|e| format!("读 config.toml 失败：{e}"))?;
+    let text =
+        std::fs::read_to_string(&cfg_path).map_err(|e| format!("读 config.toml 失败：{e}"))?;
     if text.trim().is_empty() {
         return Err("config.toml 为空".into());
     }
@@ -2735,7 +2850,11 @@ pub fn count_codex_skills(app: AppHandle) -> usize {
         for e in rd.filter_map(|e| e.ok()) {
             let p = e.path();
             let name = e.file_name().to_string_lossy().to_string();
-            if p.is_dir() && !name.starts_with('.') && !name.contains(".bak-") && p.join("SKILL.md").is_file() {
+            if p.is_dir()
+                && !name.starts_with('.')
+                && !name.contains(".bak-")
+                && p.join("SKILL.md").is_file()
+            {
                 n += 1;
             }
         }
@@ -3007,7 +3126,10 @@ pub fn custom_versions_list(app: AppHandle) -> Vec<CustomVersion> {
 
 /// 新建/更新自定义版本
 #[tauri::command]
-pub fn custom_version_save(app: AppHandle, version: CustomVersion) -> Result<CustomVersion, String> {
+pub fn custom_version_save(
+    app: AppHandle,
+    version: CustomVersion,
+) -> Result<CustomVersion, String> {
     let mut st = load_custom(&app);
     match st.versions.iter().position(|v| v.id == version.id) {
         Some(i) => st.versions[i] = version.clone(),
@@ -3055,11 +3177,7 @@ pub fn custom_version_install(app: AppHandle, version: CustomVersion) -> Install
             if let Some(b) = &bk {
                 steps.push(format!("原件备份 → {}", b.display()));
             }
-            let out = format!(
-                "{}\n{}\n",
-                managed_header(&version.id),
-                body.trim_end()
-            );
+            let out = format!("{}\n{}\n", managed_header(&version.id), body.trim_end());
             let _ = existing;
             if let Err(e) = write_utf8_no_bom(&target, &out) {
                 return report_err(steps, e);
@@ -3083,7 +3201,10 @@ pub fn custom_version_install(app: AppHandle, version: CustomVersion) -> Install
 
         // 若源本身是一个技能（含 SKILL.md）→ 整体复制为一个技能
         if src.join("SKILL.md").exists() {
-            let name = src.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+            let name = src
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default();
             let dest = dest_root.join(&name);
             let _ = std::fs::remove_dir_all(&dest);
             match copy_dir(&src, &dest) {
@@ -3164,7 +3285,11 @@ pub fn browse_dir(path: Option<String>) -> Result<Vec<BrowseEntry>, String> {
             is_dir,
         });
     }
-    out.sort_by(|a, b| b.is_dir.cmp(&a.is_dir).then(a.name.to_lowercase().cmp(&b.name.to_lowercase())));
+    out.sort_by(|a, b| {
+        b.is_dir
+            .cmp(&a.is_dir)
+            .then(a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+    });
     Ok(out)
 }
 
@@ -3214,13 +3339,18 @@ mod tests {
     #[test]
     fn legacy_bare_marker_is_recognized() {
         // 旧版写的是无载荷的裸标记，必须也能识别并替换（不能叠加）
-        let legacy = "用户内容\n<!-- HANSHUANG-INJECT:BEGIN -->\n老版正文\n<!-- HANSHUANG-INJECT:END -->\n";
+        let legacy =
+            "用户内容\n<!-- HANSHUANG-INJECT:BEGIN -->\n老版正文\n<!-- HANSHUANG-INJECT:END -->\n";
         let (out, updated) = apply_block(legacy, BK, EK, BM, EM, "新版正文");
         assert!(updated, "应识别到旧版裸标记并更新");
         assert!(out.contains("新版正文"));
         assert!(!out.contains("老版正文"), "旧正文应被替换掉");
         assert!(out.contains("用户内容"));
-        assert_eq!(out.matches("HANSHUANG-INJECT:BEGIN").count(), 1, "不能叠加成两块");
+        assert_eq!(
+            out.matches("HANSHUANG-INJECT:BEGIN").count(),
+            1,
+            "不能叠加成两块"
+        );
     }
 
     #[test]
@@ -3283,7 +3413,10 @@ mod tests {
     #[test]
     fn injected_signature_is_pojia_without_version() {
         let head = managed_header("codex");
-        assert!(head.contains("<!-- managed by pojia -->"), "应含 pojia 署名: {head}");
+        assert!(
+            head.contains("<!-- managed by pojia -->"),
+            "应含 pojia 署名: {head}"
+        );
         for banned in ["寒霜", "破甲", "pojia", "v5", "v4", "HANSHUANG"] {
             assert!(
                 !head.to_lowercase().contains(&banned.to_lowercase()),
@@ -3304,7 +3437,10 @@ mod tests {
             r"C:\u\.l-skill\modules",
         );
         assert!(out.contains("cursor/Cursor"));
-        assert!(out.contains("C:/u/.l-skill/skills"), "反斜杠应转正斜杠: {out}");
+        assert!(
+            out.contains("C:/u/.l-skill/skills"),
+            "反斜杠应转正斜杠: {out}"
+        );
         assert!(has_unrendered(&out).is_none());
     }
 
@@ -3326,7 +3462,10 @@ mod tests {
     fn stamp_matches_legacy_format() {
         let s = stamp();
         assert_eq!(s.len(), 15);
-        assert!(Regex::new(r"^\d{8}-\d{6}$").unwrap().is_match(&s), "格式: {s}");
+        assert!(
+            Regex::new(r"^\d{8}-\d{6}$").unwrap().is_match(&s),
+            "格式: {s}"
+        );
     }
 
     #[test]
@@ -3350,7 +3489,10 @@ mod tests {
             assert!(!bk.is_empty() && !ek.is_empty(), "{name} 标记不能为空");
             assert_ne!(bk, ek, "{name} 起止标记不能相同");
             // 结束标记不能是开始标记的子串（否则先匹配到错误位置）
-            assert!(!bk.contains(ek) && !ek.contains(bk), "{name} 起止标记不能互相包含");
+            assert!(
+                !bk.contains(ek) && !ek.contains(bk),
+                "{name} 起止标记不能互相包含"
+            );
         }
     }
 
@@ -3379,10 +3521,16 @@ mod tests {
         // 定位应命中第二个开始标记到其后的结束标记
         let (s, e) = find_block(real_like, BK, EK).expect("应能定位到块");
         let block = &real_like[s..e];
-        assert!(block.starts_with("<!-- 寒霜破甲注入开始"), "块起点错误: {block}");
+        assert!(
+            block.starts_with("<!-- 寒霜破甲注入开始"),
+            "块起点错误: {block}"
+        );
         assert!(block.ends_with("<!-- 寒霜破甲注入结束 -->"), "块终点错误");
         assert!(block.contains("旧注入正文"));
-        assert!(!block.contains("用户自有内容第一部分"), "不能把用户内容圈进块");
+        assert!(
+            !block.contains("用户自有内容第一部分"),
+            "不能把用户内容圈进块"
+        );
 
         // 替换后：用户内容保留、孤立标记保留、块只有一份新内容
         let bm = "<!-- 寒霜破甲注入开始 · 新版本.md -->";
@@ -3479,7 +3627,10 @@ mod scan_tests {
             }
         }
         println!("扫描结果: {}", found.join(", "));
-        assert!(!found.is_empty(), "应在 _assets/skill/*/skills 下发现技能包");
+        assert!(
+            !found.is_empty(),
+            "应在 _assets/skill/*/skills 下发现技能包"
+        );
     }
 
     /// 旧结构兼容：_assets/<包名>/<技能>/（无 skills 中间层）

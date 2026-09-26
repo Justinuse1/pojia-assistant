@@ -206,7 +206,11 @@ pub struct ProbeReport {
 
 fn dir_count(p: &Path) -> usize {
     std::fs::read_dir(p)
-        .map(|rd| rd.filter_map(|e| e.ok()).filter(|e| e.path().is_dir()).count())
+        .map(|rd| {
+            rd.filter_map(|e| e.ok())
+                .filter(|e| e.path().is_dir())
+                .count()
+        })
         .unwrap_or(0)
 }
 
@@ -266,7 +270,9 @@ fn size_dirs_stamp(root: &Path) -> Vec<u64> {
 
 /// 递归累加目录体积（字节）。
 fn dir_bytes(dir: &Path, acc: &mut u64) {
-    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return;
+    };
     for e in rd.filter_map(|e| e.ok()) {
         let path = e.path();
         if path.is_dir() {
@@ -585,7 +591,10 @@ pub fn engine_probe(app: AppHandle, deep: Option<bool>) -> ProbeReport {
     let desktop_dir = root.join("runtime/desktop/app");
     let desktop_parts: [(&str, PathBuf); 4] = [
         ("ChatGPT.exe", desktop_dir.join("ChatGPT.exe")),
-        ("resources/codex.exe", desktop_dir.join("resources/codex.exe")),
+        (
+            "resources/codex.exe",
+            desktop_dir.join("resources/codex.exe"),
+        ),
         ("app.asar", desktop_dir.join("resources/app.asar")),
         ("cua_node", desktop_dir.join("resources/cua_node")),
     ];
@@ -613,8 +622,10 @@ pub fn engine_probe(app: AppHandle, deep: Option<bool>) -> ProbeReport {
             (c.label, wd, exists)
         })
         .collect();
-    let bad_clients: Vec<&(String, String, bool)> =
-        client_paths.iter().filter(|(_, wd, ok)| !*ok || wd.is_empty()).collect();
+    let bad_clients: Vec<&(String, String, bool)> = client_paths
+        .iter()
+        .filter(|(_, wd, ok)| !*ok || wd.is_empty())
+        .collect();
     let client_ok = bad_clients.is_empty();
 
     // config.toml 里当前用的 provider 名（如 custom）
@@ -812,7 +823,8 @@ impl ProcSlot {
             a.remove();
         }
         self.child = None;
-    }}
+    }
+}
 
 /// 运行体实例表：一次可同时存在多个（CLI 控制台 + 桌面端）
 #[derive(Default)]
@@ -984,7 +996,11 @@ fn finish_launch(
     // ① Job 绑定（只做退出回收，不限制外部终止）
     if let Some(j) = job.as_ref() {
         if !winproc::assign_pid(j, pid) {
-            emit_log(app, "Job Object 绑定失败（只影响退出回收，不影响启动）", "warn");
+            emit_log(
+                app,
+                "Job Object 绑定失败（只影响退出回收，不影响启动）",
+                "warn",
+            );
         }
     }
 
@@ -1954,7 +1970,11 @@ fn codex_event_step(line: &str) -> Option<String> {
             let item = v.get("item")?;
             match item.get("type")?.as_str()? {
                 "reasoning" => {
-                    let t = item.get("text").and_then(|x| x.as_str()).unwrap_or("").trim();
+                    let t = item
+                        .get("text")
+                        .and_then(|x| x.as_str())
+                        .unwrap_or("")
+                        .trim();
                     if t.is_empty() {
                         None
                     } else {
@@ -1962,7 +1982,11 @@ fn codex_event_step(line: &str) -> Option<String> {
                     }
                 }
                 "command_execution" => {
-                    let cmd = item.get("command").and_then(|x| x.as_str()).unwrap_or("").trim();
+                    let cmd = item
+                        .get("command")
+                        .and_then(|x| x.as_str())
+                        .unwrap_or("")
+                        .trim();
                     if cmd.is_empty() {
                         return None;
                     }
@@ -1972,7 +1996,11 @@ fn codex_event_step(line: &str) -> Option<String> {
                     }
                 }
                 "error" => {
-                    let m = item.get("message").and_then(|x| x.as_str()).unwrap_or("").trim();
+                    let m = item
+                        .get("message")
+                        .and_then(|x| x.as_str())
+                        .unwrap_or("")
+                        .trim();
                     if m.is_empty() {
                         None
                     } else {
@@ -1997,8 +2025,12 @@ fn codex_event_step(line: &str) -> Option<String> {
          * / request_user_input / elicitation_request / request_permissions。
          * 这些原本被丢掉 —— 表现就是「agent 不动了，界面上什么都没有」。
          */
-        "exec_approval_request" | "apply_patch_approval_request" | "request_user_input"
-        | "elicitation_request" | "request_permissions" | "dynamic_tool_call_request" => {
+        "exec_approval_request"
+        | "apply_patch_approval_request"
+        | "request_user_input"
+        | "elicitation_request"
+        | "request_permissions"
+        | "dynamic_tool_call_request" => {
             let what = v
                 .get("command")
                 .or_else(|| v.get("path"))
@@ -2036,7 +2068,9 @@ fn codex_agent_message(line: &str) -> Option<String> {
     if item.get("type")?.as_str()? != "agent_message" {
         return None;
     }
-    item.get("text").and_then(|x| x.as_str()).map(|s| s.to_string())
+    item.get("text")
+        .and_then(|x| x.as_str())
+        .map(|s| s.to_string())
 }
 
 // ---------- Agent 会话 Tauri commands ----------
@@ -2213,12 +2247,20 @@ pub fn agent_launch(
     }
     // 技能副本也同步一份（模型读不到，但用户打开文件能看到）
     if let Err(e) = refresh_skill_snapshot(&dir, &snapshot) {
-        emit_log(&app, format!("[agent:{name}] 技能快照同步失败：{e}"), "warn");
+        emit_log(
+            &app,
+            format!("[agent:{name}] 技能快照同步失败：{e}"),
+            "warn",
+        );
     }
     // home 里的挂载副本也要跟着更新，否则 codex 读到的是旧技能
     let keep = dir.join("skills").join(AGENT_SKILL_NAME);
     if let Err(e) = mount_session_skill(&home, &name, &keep, AGENT_SKILL_NAME) {
-        emit_log(&app, format!("[agent:{name}] 技能重新挂载失败：{e}"), "warn");
+        emit_log(
+            &app,
+            format!("[agent:{name}] 技能重新挂载失败：{e}"),
+            "warn",
+        );
     }
 
     // 禁用清单：home 里全部技能（.system + 所有会话挂载），一个都不留。
@@ -2347,7 +2389,10 @@ pub fn agent_launch(
                 disables
                     .iter()
                     // 技能名可能含引号（第三方技能很常见），不转义会拼出非法 TOML
-                    .map(|n| format!("{{name=\"{}\",enabled=false}}", n.replace('\\', "\\\\").replace('"', "\\\"")))
+                    .map(|n| format!(
+                        "{{name=\"{}\",enabled=false}}",
+                        n.replace('\\', "\\\\").replace('"', "\\\"")
+                    ))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2437,30 +2482,41 @@ pub fn agent_launch(
                          * 只挑有信息量的：轮次开始/结束、命令执行、报错。
                          * 思考与正文走会话的过程展开（agent:step），不进日志。
                          */
-                        let brief = serde_json::from_str::<serde_json::Value>(t).ok().and_then(|v| {
-                            match v.get("type")?.as_str()? {
-                                "turn.started" => Some("开始本轮".to_string()),
-                                "turn.completed" => {
-                                    let u = v.get("usage")?;
-                                    Some(format!(
-                                        "本轮完成（输入 {} · 输出 {} tokens）",
-                                        u.get("input_tokens").and_then(|x| x.as_u64()).unwrap_or(0),
-                                        u.get("output_tokens").and_then(|x| x.as_u64()).unwrap_or(0)
-                                    ))
-                                }
-                                "turn.failed" => Some("本轮失败".to_string()),
-                                "item.completed" => {
-                                    let item = v.get("item")?;
-                                    if item.get("type")?.as_str()? == "command_execution" {
-                                        let cmd = item.get("command").and_then(|x| x.as_str()).unwrap_or("");
-                                        Some(format!("执行：{}", cmd.chars().take(80).collect::<String>()))
-                                    } else {
-                                        None
+                        let brief =
+                            serde_json::from_str::<serde_json::Value>(t)
+                                .ok()
+                                .and_then(|v| match v.get("type")?.as_str()? {
+                                    "turn.started" => Some("开始本轮".to_string()),
+                                    "turn.completed" => {
+                                        let u = v.get("usage")?;
+                                        Some(format!(
+                                            "本轮完成（输入 {} · 输出 {} tokens）",
+                                            u.get("input_tokens")
+                                                .and_then(|x| x.as_u64())
+                                                .unwrap_or(0),
+                                            u.get("output_tokens")
+                                                .and_then(|x| x.as_u64())
+                                                .unwrap_or(0)
+                                        ))
                                     }
-                                }
-                                _ => None,
-                            }
-                        });
+                                    "turn.failed" => Some("本轮失败".to_string()),
+                                    "item.completed" => {
+                                        let item = v.get("item")?;
+                                        if item.get("type")?.as_str()? == "command_execution" {
+                                            let cmd = item
+                                                .get("command")
+                                                .and_then(|x| x.as_str())
+                                                .unwrap_or("");
+                                            Some(format!(
+                                                "执行：{}",
+                                                cmd.chars().take(80).collect::<String>()
+                                            ))
+                                        } else {
+                                            None
+                                        }
+                                    }
+                                    _ => None,
+                                });
                         if let Some(b) = brief {
                             emit_log(&a, format!("[agent:{tag}] {b}"), "info");
                         }
@@ -2526,7 +2582,14 @@ pub fn agent_launch(
                             || t.contains("Rejected")
                             || t.contains("failed");
                         if keep {
-                            emit_log(&a, format!("[agent:{tag}] {}", t.chars().take(160).collect::<String>()), "warn");
+                            emit_log(
+                                &a,
+                                format!(
+                                    "[agent:{tag}] {}",
+                                    t.chars().take(160).collect::<String>()
+                                ),
+                                "warn",
+                            );
                         }
                     }
                 });
@@ -2587,21 +2650,61 @@ fn build_routing_manifest(app: &AppHandle, root: &Path) -> String {
     let rows: Vec<(&str, PathBuf, &str)> = vec![
         ("包根", root.to_path_buf(), "运行体根，所有相对路径的基准"),
         ("配置目录", cfg_dir.clone(), "便携 CODEX_HOME"),
-        ("主配置", cfg_dir.join("config.toml"), "模型 / 供应商 / MCP / 提示词指向"),
+        (
+            "主配置",
+            cfg_dir.join("config.toml"),
+            "模型 / 供应商 / MCP / 提示词指向",
+        ),
         ("API Key", cfg_dir.join("api_key.txt"), "备用密钥文件"),
-        ("便携箱提示词", cfg_dir.join("prompts"), "POJIA-codex 页用的提示词"),
+        (
+            "便携箱提示词",
+            cfg_dir.join("prompts"),
+            "POJIA-codex 页用的提示词",
+        ),
         ("便携箱技能", cfg_dir.join("skills"), "便携箱已装技能"),
         ("MCP 脚本", cfg_dir.join("mcp"), "MCP 启动脚本与依赖"),
-        ("MCP 依赖库", cfg_dir.join("mcp/_libs"), "MCP 的 Python 依赖"),
-        ("技能库根", root.join("_assets/skill"), "技能包（一级子目录 = 一个包）"),
+        (
+            "MCP 依赖库",
+            cfg_dir.join("mcp/_libs"),
+            "MCP 的 Python 依赖",
+        ),
+        (
+            "技能库根",
+            root.join("_assets/skill"),
+            "技能包（一级子目录 = 一个包）",
+        ),
         ("提示词库根", root.join("_assets/prompts"), "提示词主来源"),
-        ("Astra 提示词", root.join("_assets/gpt-6-astra-v1"), "Astra 合集来源"),
-        ("DSH 提示词", root.join("_assets/dsh-lazy-pack-v5/prompts"), "懒人包来源"),
-        ("第三方素材", root.join("_assets/other"), "云记忆等，由 manifest 引用"),
-        ("预设组清单", root.join("profiles"), "客户端 → 预设组（manifest.json）"),
+        (
+            "Astra 提示词",
+            root.join("_assets/gpt-6-astra-v1"),
+            "Astra 合集来源",
+        ),
+        (
+            "DSH 提示词",
+            root.join("_assets/dsh-lazy-pack-v5/prompts"),
+            "懒人包来源",
+        ),
+        (
+            "第三方素材",
+            root.join("_assets/other"),
+            "云记忆等，由 manifest 引用",
+        ),
+        (
+            "预设组清单",
+            root.join("profiles"),
+            "客户端 → 预设组（manifest.json）",
+        ),
         ("客户端顺序", root.join("profiles/_order.json"), "左栏排序"),
-        ("Agent 会话", root.join("_assets/agent"), "会话目录（含本会话）"),
-        ("Agent home", root.join("_assets/agent/_home"), "会话专用 CODEX_HOME"),
+        (
+            "Agent 会话",
+            root.join("_assets/agent"),
+            "会话目录（含本会话）",
+        ),
+        (
+            "Agent home",
+            root.join("_assets/agent/_home"),
+            "会话专用 CODEX_HOME",
+        ),
         ("内置工具", root.join("tools"), "adb 等"),
         ("codex 运行时", root.join("runtime"), "codex 与桌面端"),
         ("工作目录", root.join("workspace"), "命令的默认 cwd"),
@@ -2759,7 +2862,6 @@ fn build_routing_manifest(app: &AppHandle, root: &Path) -> String {
     out
 }
 
-
 /// 从某客户端下第一个 manifest 里取第一个落点，推出它的所在目录。
 ///
 /// `profiles::infer_work_dir` 只认 `~` 开头的落点；用绝对路径写的客户端
@@ -2831,16 +2933,15 @@ fn refresh_prompt_snapshot(dir: &Path, snapshot: &str) -> Result<(), String> {
     } else {
         format!("{}\n\n{}", text.trim_end(), snapshot)
     };
-    let updated = updated.replace("{{SELFCHECK}}\n", "").replace("{{SELFCHECK}}", "");
+    let updated = updated
+        .replace("{{SELFCHECK}}\n", "")
+        .replace("{{SELFCHECK}}", "");
     std::fs::write(&p, updated).map_err(|e| format!("写提示词失败: {e}"))
 }
 
 /// 兼容旧路径：把快照也同步进技能副本（模型读不到，但用户打开技能文件能看到）。
 fn refresh_skill_snapshot(dir: &Path, snapshot: &str) -> Result<(), String> {
-    let md = dir
-        .join("skills")
-        .join(AGENT_SKILL_NAME)
-        .join("SKILL.md");
+    let md = dir.join("skills").join(AGENT_SKILL_NAME).join("SKILL.md");
     let text = std::fs::read_to_string(&md).map_err(|e| format!("读技能失败: {e}"))?;
     // 三个标题都要认：新标题 + 两个历史标题。
     // 少认一个，那类会话文件就会每轮重复追加清单。
@@ -2849,7 +2950,8 @@ fn refresh_skill_snapshot(dir: &Path, snapshot: &str) -> Result<(), String> {
         "## 文件路由清单（本机）",
         "## 工具箱当前配置",
     ];
-    const PLACEHOLDER: &str = "（尚未写入快照。用户在「Agent 助手」页点「写入技能」后会填在这里。）";
+    const PLACEHOLDER: &str =
+        "（尚未写入快照。用户在「Agent 助手」页点「写入技能」后会填在这里。）";
     // 占位符还在 → 就地替换；否则截掉旧段落再接新的
     let updated = if let Some(i) = text.find(PLACEHOLDER) {
         format!("{}{}", &text[..i], snapshot)
@@ -2859,7 +2961,9 @@ fn refresh_skill_snapshot(dir: &Path, snapshot: &str) -> Result<(), String> {
         format!("{}\n\n{}", text.trim_end(), snapshot)
     };
     // 占位符 `{{SELFCHECK}}` 若还残留也一并清掉（模板兼容）
-    let updated = updated.replace("{{SELFCHECK}}\n", "").replace("{{SELFCHECK}}", "");
+    let updated = updated
+        .replace("{{SELFCHECK}}\n", "")
+        .replace("{{SELFCHECK}}", "");
     std::fs::write(&md, updated).map_err(|e| format!("写技能失败: {e}"))
 }
 
@@ -2897,7 +3001,11 @@ pub fn agent_save_image(
         .map_err(|e| format!("图片解码失败: {e}"))?;
     let mut f = std::fs::File::create(&path).map_err(|e| e.to_string())?;
     f.write_all(&bytes).map_err(|e| e.to_string())?;
-    emit_log(&app, format!("[agent:{name}] 图片已接收（{} KB）", bytes.len() / 1024), "info");
+    emit_log(
+        &app,
+        format!("[agent:{name}] 图片已接收（{} KB）", bytes.len() / 1024),
+        "info",
+    );
     Ok(path.display().to_string())
 }
 
@@ -3157,7 +3265,11 @@ fn queue_proposals(app: &AppHandle, session: &str, dir: &Path, props: &[WritePro
         }
         let tmp = target.with_extension("alice-tmp");
         if std::fs::write(&tmp, &p.content).is_err() || std::fs::rename(&tmp, &target).is_err() {
-            emit_log(app, format!("[agent:{session}] 写入失败：{}", target.display()), "err");
+            emit_log(
+                app,
+                format!("[agent:{session}] 写入失败：{}", target.display()),
+                "err",
+            );
             continue;
         }
         // 留档：applied 里存一份，界面上能看到刚改了什么
@@ -3195,7 +3307,11 @@ fn queue_proposals(app: &AppHandle, session: &str, dir: &Path, props: &[WritePro
 
 /// 路径是否在 root 之下（大小写不敏感，`/` 与 `\` 等价）。
 fn path_under(p: &Path, root: &Path) -> bool {
-    let norm = |s: &str| s.replace('/', "\\").trim_end_matches('\\').to_ascii_lowercase();
+    let norm = |s: &str| {
+        s.replace('/', "\\")
+            .trim_end_matches('\\')
+            .to_ascii_lowercase()
+    };
     let a = norm(&p.display().to_string());
     let b = norm(&root.display().to_string());
     !b.is_empty() && (a == b || a.starts_with(&format!("{b}\\")))
@@ -3204,8 +3320,8 @@ fn path_under(p: &Path, root: &Path) -> bool {
 /// 是否代码/脚本类文件（禁止改）。
 fn is_code_path(p: &Path) -> bool {
     const CODE_EXT: [&str; 17] = [
-        "rs", "ts", "tsx", "js", "jsx", "mjs", "cjs", "py", "cmd", "bat", "ps1", "sh", "c",
-        "cpp", "h", "go", "exe",
+        "rs", "ts", "tsx", "js", "jsx", "mjs", "cjs", "py", "cmd", "bat", "ps1", "sh", "c", "cpp",
+        "h", "go", "exe",
     ];
     p.extension()
         .and_then(|e| e.to_str())
@@ -3407,8 +3523,16 @@ fn launch_impl(
                 "LOCALAPPDATA",
                 data_dir.join("AppData/Local").display().to_string(),
             );
-            set(&mut envs, "TEMP", data_dir.join("Temp").display().to_string());
-            set(&mut envs, "TMP", data_dir.join("Temp").display().to_string());
+            set(
+                &mut envs,
+                "TEMP",
+                data_dir.join("Temp").display().to_string(),
+            );
+            set(
+                &mut envs,
+                "TMP",
+                data_dir.join("Temp").display().to_string(),
+            );
             set(&mut envs, "PYTHONIOENCODING", "utf-8".into());
             // vendor bin 必须进 PATH：codex 会去找同目录的辅助 exe
             let base_path = std::env::var("PATH").unwrap_or_default();
@@ -3730,7 +3854,12 @@ pub fn codex_factory_reset(
      * 删除辅助：统一记日志。ignore_error=true 用于「本来就可能不存在」
      * 的目标（如 -wal/-shm 只在有未合并事务时出现）。
      */
-    fn rm_path(p: &std::path::Path, label: &str, cleared: &mut Vec<String>, failed: &mut Vec<String>) {
+    fn rm_path(
+        p: &std::path::Path,
+        label: &str,
+        cleared: &mut Vec<String>,
+        failed: &mut Vec<String>,
+    ) {
         if !p.exists() {
             return;
         }
@@ -3794,8 +3923,20 @@ pub fn codex_factory_reset(
     }
 
     // ⑤ 临时/工作目录（保留名单之外的运行产物）
-    for name in [".tmp", "tmp", "work", "node_repl", "visualizations", "ambient-suggestions"] {
-        rm_path(&home.join(name), &format!("{name}/"), &mut cleared, &mut failed);
+    for name in [
+        ".tmp",
+        "tmp",
+        "work",
+        "node_repl",
+        "visualizations",
+        "ambient-suggestions",
+    ] {
+        rm_path(
+            &home.join(name),
+            &format!("{name}/"),
+            &mut cleared,
+            &mut failed,
+        );
     }
 
     /*
@@ -4002,7 +4143,12 @@ pub fn codex_import_portable(app: AppHandle, source: String) -> Result<String, S
         format!(
             "便携箱导入完成：{copied} 个文件，{} 项失败（{}）",
             failed.len(),
-            failed.iter().take(3).cloned().collect::<Vec<_>>().join("; ")
+            failed
+                .iter()
+                .take(3)
+                .cloned()
+                .collect::<Vec<_>>()
+                .join("; ")
         )
     };
     emit_log(&app, msg.clone(), "ok");
@@ -4052,9 +4198,9 @@ fn stop_impl(
         );
     }
     // 兜底：注册表丢了也按目录形态清一遍（仅停止路径，绝不在启动时做）
-    let (dir_killed, dir_removed) = alias::sweep_dir_aliases(
-        &root.join("runtime/codex/node_modules/@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/bin"),
-    );
+    let (dir_killed, dir_removed) = alias::sweep_dir_aliases(&root.join(
+        "runtime/codex/node_modules/@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/bin",
+    ));
     let (d2_killed, d2_removed) = alias::sweep_dir_aliases(&root.join("runtime/desktop/app"));
     let (d3_killed, d3_removed) =
         alias::sweep_dir_aliases(&root.join("runtime/desktop/app/resources"));
@@ -4306,10 +4452,7 @@ pub fn list_dir(path: String) -> Result<Vec<DirEntry>, String> {
 #[tauri::command]
 pub fn append_with_backup(path: String, content: String) -> Result<String, String> {
     let p = PathBuf::from(&path);
-    let bak = p.with_extension(format!(
-        "bak-{}",
-        chrono_stamp()
-    ));
+    let bak = p.with_extension(format!("bak-{}", chrono_stamp()));
     if p.exists() {
         std::fs::copy(&p, &bak).map_err(|e| format!("备份失败: {e}"))?;
     }
@@ -4496,7 +4639,8 @@ pub fn sync_config_from_host(app: AppHandle) -> Result<String, String> {
     }
 
     // ⚠️ 落盘前先校验：不过就中止，原文件保持可用
-    toml_looks_valid(&text).map_err(|e| format!("生成结果未通过校验，已中止（原文件未改动）：{e}"))?;
+    toml_looks_valid(&text)
+        .map_err(|e| format!("生成结果未通过校验，已中止（原文件未改动）：{e}"))?;
 
     // 备份（只在确认可写之后做）
     let bak = dst.with_extension(format!("toml.bak-{}", chrono_stamp()));
@@ -4555,7 +4699,10 @@ mod tests {
     #[test]
     fn raw_scalar_keeps_quotes() {
         let t = "model = \"cn:deepseek-v4.1-flash\"\nmodel_provider = \"custom\"\n";
-        assert_eq!(raw_scalar(t, "model").unwrap(), "\"cn:deepseek-v4.1-flash\"");
+        assert_eq!(
+            raw_scalar(t, "model").unwrap(),
+            "\"cn:deepseek-v4.1-flash\""
+        );
         assert_eq!(raw_scalar(t, "model_provider").unwrap(), "\"custom\"");
     }
 
@@ -4609,7 +4756,8 @@ mod tests {
     #[test]
     fn sync_keeps_quotes_end_to_end() {
         let host = "model = \"cn:deepseek-v4.1-flash\"\nmodel_provider = \"custom\"\n";
-        let bundled = "model = \"old\"\nmodel_provider = \"custom\"\nmodel_context_window = 1000000\n";
+        let bundled =
+            "model = \"old\"\nmodel_provider = \"custom\"\nmodel_context_window = 1000000\n";
         let mut lines: Vec<String> = bundled.lines().map(|s| s.to_string()).collect();
         for key in ["model", "model_provider"] {
             if let Some(v) = raw_scalar(host, key) {
@@ -4627,7 +4775,10 @@ mod tests {
             }
         }
         let out = lines.join("\n") + "\n";
-        assert!(out.contains("model = \"cn:deepseek-v4.1-flash\""), "引号必须保留：\n{out}");
+        assert!(
+            out.contains("model = \"cn:deepseek-v4.1-flash\""),
+            "引号必须保留：\n{out}"
+        );
         assert!(toml_looks_valid(&out).is_ok(), "结果必须通过校验：\n{out}");
     }
 

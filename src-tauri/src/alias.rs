@@ -130,9 +130,14 @@ mod ffi {
 const ALIAS_PREFIX: &str = "wz";
 const ALIAS_BODY_LEN: usize = 8;
 
+/// UTF-16 编码（仅 Windows 使用；非 Windows 平台无调用方）
+#[cfg(windows)]
 fn wide(s: &Path) -> Vec<u16> {
     use std::os::windows::ffi::OsStrExt;
-    s.as_os_str().encode_wide().chain(std::iter::once(0)).collect()
+    s.as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect()
 }
 
 /// 清掉隐藏属性（否则个别场景删不掉）
@@ -244,7 +249,9 @@ pub fn make_alias(target: &Path) -> Option<AliasFile> {
                 return None;
             }
             // 隐藏起来：目录里默认看不见，少一个被顺手清理的机会
-            unsafe { ffi::SetFileAttributesW(wide(&candidate).as_ptr(), ffi::FILE_ATTRIBUTE_HIDDEN) };
+            unsafe {
+                ffi::SetFileAttributesW(wide(&candidate).as_ptr(), ffi::FILE_ATTRIBUTE_HIDDEN)
+            };
             return Some(AliasFile {
                 path: candidate,
                 stem,
@@ -454,9 +461,7 @@ pub fn lock_pid(pid: u32) -> Option<Guard> {
     // 而访问检查只在这一刻做一次，收紧后再补申请会被拒。
     let h_kill = unsafe {
         ffi::OpenProcess(
-            ffi::PROCESS_TERMINATE
-                | ffi::PROCESS_QUERY_LIMITED_INFORMATION
-                | ffi::SYNCHRONIZE,
+            ffi::PROCESS_TERMINATE | ffi::PROCESS_QUERY_LIMITED_INFORMATION | ffi::SYNCHRONIZE,
             0,
             pid,
         )
@@ -634,7 +639,10 @@ fn read_registry(codex_home: &Path) -> Vec<(u32, PathBuf)> {
                 return None;
             }
             let (pid_s, path_s) = s.split_once('|')?;
-            Some((pid_s.trim().parse::<u32>().ok()?, PathBuf::from(path_s.trim())))
+            Some((
+                pid_s.trim().parse::<u32>().ok()?,
+                PathBuf::from(path_s.trim()),
+            ))
         })
         .collect()
 }
@@ -751,7 +759,10 @@ pub fn sweep_dir_aliases(dir: &Path) -> (usize, usize) {
         let Some(img) = crate::winproc::image_path(row.pid) else {
             continue;
         };
-        if !img.to_ascii_lowercase().starts_with(&root.to_ascii_lowercase()) {
+        if !img
+            .to_ascii_lowercase()
+            .starts_with(&root.to_ascii_lowercase())
+        {
             continue;
         }
         if recover_and_kill(row.pid) {
@@ -890,10 +901,7 @@ mod tests {
         // 外部视角：OpenProcess(PROCESS_TERMINATE) 应被 DACL 拒绝
         let external = crate::winproc::kill_pid_force(pid);
         assert!(!external, "上锁后外部强制终止必须失败");
-        assert!(
-            matches!(child.try_wait(), Ok(None)),
-            "上锁后靶子应仍存活"
-        );
+        assert!(matches!(child.try_wait(), Ok(None)), "上锁后靶子应仍存活");
 
         // 自己的预留句柄：应能终止
         assert!(guard.terminate(), "预留句柄终止必须成功");

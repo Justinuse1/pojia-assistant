@@ -1,18 +1,18 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod cloud;
-mod cloud_translate;
-mod profiles;
-mod inject;
-mod runtime;
-mod winproc;
 mod alias;
-mod import_skill;
 mod ammo;
 mod board;
+mod cloud;
+mod cloud_translate;
+mod import_skill;
+mod inject;
 mod probe;
+mod profiles;
 mod report;
+mod runtime;
 mod speedtest;
+mod winproc;
 
 use tauri::Emitter;
 use tauri::Manager;
@@ -50,7 +50,10 @@ fn spawn_proxy_if_auto_start(app: &tauri::AppHandle) {
                 r.error.unwrap_or_default()
             )
         };
-        let _ = app2.emit("runtime:log", (msg, if r.ok { "ok" } else { "warn" }.to_string()));
+        let _ = app2.emit(
+            "runtime:log",
+            (msg, if r.ok { "ok" } else { "warn" }.to_string()),
+        );
     });
 }
 
@@ -92,7 +95,7 @@ fn main() {
         .manage(alias::AliasGuards::default())
         .manage(cloud::CloudProxy::default())
         .invoke_handler(tauri::generate_handler![
-        board::board_read,
+            board::board_read,
             report::report_scan,
             report::report_generate,
             speedtest::speedtest_run,

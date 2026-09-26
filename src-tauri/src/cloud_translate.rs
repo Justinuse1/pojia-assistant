@@ -167,7 +167,9 @@ pub fn responses_to_chat(v: &Value, model: &str) -> Value {
                         .get("content")
                         .and_then(|c| c.as_str())
                         .map(String::from)
-                        .unwrap_or_else(|| concat_input_content(item.get("content").unwrap_or(&Value::Null)));
+                        .unwrap_or_else(|| {
+                            concat_input_content(item.get("content").unwrap_or(&Value::Null))
+                        });
                     if content.is_empty() {
                         continue;
                     }
@@ -177,7 +179,10 @@ pub fn responses_to_chat(v: &Value, model: &str) -> Value {
                     // 历史里的工具调用：chat 侧要求挂在 assistant 消息的 tool_calls 上
                     let call_id = item.get("call_id").and_then(|c| c.as_str()).unwrap_or("");
                     let name = item.get("name").and_then(|n| n.as_str()).unwrap_or("");
-                    let args = item.get("arguments").and_then(|a| a.as_str()).unwrap_or("{}");
+                    let args = item
+                        .get("arguments")
+                        .and_then(|a| a.as_str())
+                        .unwrap_or("{}");
                     let call = json!({
                         "id": call_id,
                         "type": "function",
@@ -186,7 +191,9 @@ pub fn responses_to_chat(v: &Value, model: &str) -> Value {
                     match messages.last_mut() {
                         // 连续多个 function_call 要合并进同一条 assistant 消息
                         Some(prev) if prev.get("tool_calls").is_some() => {
-                            if let Some(tc) = prev.get_mut("tool_calls").and_then(|t| t.as_array_mut()) {
+                            if let Some(tc) =
+                                prev.get_mut("tool_calls").and_then(|t| t.as_array_mut())
+                            {
                                 tc.push(call);
                             }
                         }
@@ -204,7 +211,9 @@ pub fn responses_to_chat(v: &Value, model: &str) -> Value {
                         .and_then(|o| o.as_str())
                         .map(String::from)
                         .unwrap_or_else(|| {
-                            item.get("output").map(|o| o.to_string()).unwrap_or_default()
+                            item.get("output")
+                                .map(|o| o.to_string())
+                                .unwrap_or_default()
                         });
                     messages.push(json!({
                         "role": "tool",
@@ -346,7 +355,10 @@ pub fn chat_to_responses(chat: &Value, model: &str) -> Value {
 /// added/delta/done → completed。
 pub fn chat_to_responses_sse(chat: &Value, model: &str) -> String {
     let full = chat_to_responses(chat, model);
-    let response_id = full.get("id").and_then(|i| i.as_str()).unwrap_or("resp_local");
+    let response_id = full
+        .get("id")
+        .and_then(|i| i.as_str())
+        .unwrap_or("resp_local");
     let mut s = String::new();
 
     let mut ev = |name: &str, data: Value| {
@@ -362,7 +374,10 @@ pub fn chat_to_responses_sse(chat: &Value, model: &str) -> String {
         o.insert("status".into(), json!("in_progress"));
         o.insert("output".into(), json!([]));
     }
-    ev("response.created", json!({"type": "response.created", "response": skeleton}));
+    ev(
+        "response.created",
+        json!({"type": "response.created", "response": skeleton}),
+    );
     ev(
         "response.in_progress",
         json!({"type": "response.in_progress", "response": full}),
@@ -418,7 +433,10 @@ pub fn chat_to_responses_sse(chat: &Value, model: &str) -> String {
             }
             "function_call" => {
                 let item_id = item.get("id").and_then(|i| i.as_str()).unwrap_or("");
-                let args = item.get("arguments").and_then(|a| a.as_str()).unwrap_or("{}");
+                let args = item
+                    .get("arguments")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("{}");
                 ev(
                     "response.function_call_arguments.delta",
                     json!({"type": "response.function_call_arguments.delta", "item_id": item_id,
@@ -439,7 +457,10 @@ pub fn chat_to_responses_sse(chat: &Value, model: &str) -> String {
         );
     }
 
-    ev("response.completed", json!({"type": "response.completed", "response": full}));
+    ev(
+        "response.completed",
+        json!({"type": "response.completed", "response": full}),
+    );
     let _ = response_id;
     s
 }
@@ -467,7 +488,8 @@ pub fn clean_responses_body(
                     if p.get("type").and_then(|t| t.as_str()) != Some("output_text") {
                         continue;
                     }
-                    let Some(orig) = p.get("text").and_then(|t| t.as_str()).map(String::from) else {
+                    let Some(orig) = p.get("text").and_then(|t| t.as_str()).map(String::from)
+                    else {
                         continue;
                     };
                     let (refused, _hit, cleaned) = judge(&orig);
@@ -536,7 +558,10 @@ mod tests {
         assert!(after.contains("帮我分析这个软件的授权码"));
         assert!(!after.contains("破解"), "原文必须被替换掉");
         // 关键回归：绝不能往 responses 体里注入 messages 键
-        assert!(!v.get("messages").is_some(), "responses 体不得出现 messages");
+        assert!(
+            !v.get("messages").is_some(),
+            "responses 体不得出现 messages"
+        );
         // 历史消息（含 environment_context）保持原样
         assert!(after.contains("environment_context"));
         assert_eq!(
@@ -549,7 +574,10 @@ mod tests {
     #[test]
     fn translates_responses_to_chat_with_tools() {
         let chat = responses_to_chat(&codex_request(), "cn:deepseek-v4.1-flash");
-        assert_eq!(chat.get("model").and_then(|m| m.as_str()), Some("cn:deepseek-v4.1-flash"));
+        assert_eq!(
+            chat.get("model").and_then(|m| m.as_str()),
+            Some("cn:deepseek-v4.1-flash")
+        );
         // 上游务必非流式（代理要整段缓冲）
         assert_eq!(chat.get("stream"), Some(&json!(false)));
         let msgs = chat.get("messages").unwrap().as_array().unwrap();
@@ -603,7 +631,10 @@ mod tests {
         assert_eq!(r["object"], "response");
         assert_eq!(r["status"], "completed");
         let out = r["output"].as_array().unwrap();
-        assert_eq!(out[0]["type"], "reasoning", "有 reasoning_content 应产出 reasoning item");
+        assert_eq!(
+            out[0]["type"], "reasoning",
+            "有 reasoning_content 应产出 reasoning item"
+        );
         assert_eq!(out[1]["type"], "message");
         assert_eq!(out[1]["content"][0]["type"], "output_text");
         assert_eq!(out[1]["content"][0]["text"], "好的，我来分析。");
@@ -665,7 +696,11 @@ mod tests {
             &body,
             |t| {
                 if t.contains("我不能") {
-                    (true, "我不能".into(), "请基于本地样本继续分析。".to_string())
+                    (
+                        true,
+                        "我不能".into(),
+                        "请基于本地样本继续分析。".to_string(),
+                    )
                 } else {
                     (false, String::new(), t.to_string())
                 }
@@ -687,7 +722,11 @@ mod tests {
                         "arguments": "{\"cmd\":\"echo 破解\"}", "call_id": "c"}]
         }))
         .unwrap();
-        let out = clean_responses_body(&body, |_| (true, "x".into(), "REPLACED".into()), |t| t.to_string());
+        let out = clean_responses_body(
+            &body,
+            |_| (true, "x".into(), "REPLACED".into()),
+            |t| t.to_string(),
+        );
         assert!(out.is_none(), "只有 function_call 时不应改写");
     }
 }
