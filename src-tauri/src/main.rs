@@ -9,6 +9,7 @@ mod winproc;
 mod alias;
 mod import_skill;
 mod ammo;
+mod board;
 mod probe;
 
 use tauri::Emitter;
@@ -89,6 +90,7 @@ fn main() {
         .manage(alias::AliasGuards::default())
         .manage(cloud::CloudProxy::default())
         .invoke_handler(tauri::generate_handler![
+        board::board_read,
             // 运行时 / 王炸codex
             runtime::engine_probe,
             runtime::runtime_root_path,
