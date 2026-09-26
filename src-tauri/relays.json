@@ -1,0 +1,23 @@
+{
+  "relays": [
+    {
+      "name": "dsh中转",
+      "base": "https://api.dshapi.icu/v1",
+      "key": "sk-83c...c58b",
+      "models": [
+        "deepseek-v4.1-flash",
+        "v4-pro",
+        "glm-5.3",
+        "kimi-k3"
+      ]
+    },
+    {
+      "name": "官转(示例)",
+      "base": "https://api.example.com/v1",
+      "key": "sk-xxx",
+      "models": [
+        "deepseek-chat"
+      ]
+    }
+  ]
+}

@@ -1,3 +1,16 @@
+## v6.0.0 (2026-09-26)
+
+### 战果引擎（v5.3 内容随本版发布）
+- `report.rs`：探针报告扫描（变体/模型/挡位/ASR/PASS-FAIL 解析）+ 弹药库只读统计
+- 项目看板页新增「战果摘要」区块，一键生成战报 markdown 到桌面
+
+### 多中转测速
+- `speedtest.rs` + 中转测速页（11 导航）：对 relays.json 中每个中转×模型发 1-token 补全，量延迟与可用性
+- 复用 ureq（零新依赖），排序即排名（可用优先、延迟升序）
+
+### CI 自动构建
+- GitHub Actions `.github/workflows/build.yml`：Windows/macOS/Linux 三平台，打 tag v* 自动出 Release
+
 # Changelog
 
 ## v5.2.0 (2026-09-26)

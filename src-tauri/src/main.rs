@@ -12,6 +12,7 @@ mod ammo;
 mod board;
 mod probe;
 mod report;
+mod speedtest;
 
 use tauri::Emitter;
 use tauri::Manager;
@@ -94,6 +95,7 @@ fn main() {
         board::board_read,
             report::report_scan,
             report::report_generate,
+            speedtest::speedtest_run,
             // 运行时 / 王炸codex
             runtime::engine_probe,
             runtime::runtime_root_path,
