@@ -2,7 +2,7 @@
 #  部署脚本：把生产构建的 exe 装进分发目录
 # ------------------------------------------------------------
 #  流程：停进程 → 备份旧 exe → 覆盖 → 重启
-#  回滚：把 <分发目录>\新alice助手.exe.rollback-* 复制回去
+#  回滚：把 <分发目录>\pojia-assistant.exe.rollback-* 复制回去
 #
 #  用法：
 #    pwsh -File deploy-aijail-opt.ps1                        # 用默认路径
@@ -13,7 +13,7 @@
 #  原先 $pkg / $built 是写死的 F:\重构ui\... 绝对路径，换台机器、
 #  换个克隆位置脚本直接抛异常；这类本机路径也不该出现在公开仓库里。
 #  现在按「脚本自身位置」推导默认值 —— 脚本在 <仓库根>/ 下，
-#  分发目录默认取仓库同级的「新alice助手」。
+#  分发目录默认取仓库同级的「pojia-assistant」。
 # ============================================================
 param(
     [switch]$WhatIfOnly,
@@ -32,15 +32,15 @@ if (-not $Built) {
     $Built = Join-Path $repoRoot 'src-tauri\target\release\alice-ui.exe'
 }
 if (-not $Pkg) {
-    # 默认：仓库同级的「新alice助手」分发目录
-    $Pkg = Join-Path (Split-Path -Parent $repoRoot) '新alice助手'
+    # 默认：仓库同级的「pojia-assistant」分发目录
+    $Pkg = Join-Path (Split-Path -Parent $repoRoot) 'pojia-assistant'
 }
 
 if (-not (Test-Path -LiteralPath $Pkg)) {
     throw "分发目录不存在：$Pkg`n用 -Pkg 指定一个含 resources\ 的目录。"
 }
 
-# exe 名随分发形态（这里固定叫「新alice助手.exe」）。
+# exe 名随分发形态（这里固定叫「pojia-assistant.exe」）。
 # 用码点拼出来是为了让本脚本自身不依赖文件编码 —— 源码里直接写中文
 # 在某些编辑/终端组合下会被存成 GBK，PowerShell 读取时就成了乱码文件名。
 $exeName = [string]::Concat(

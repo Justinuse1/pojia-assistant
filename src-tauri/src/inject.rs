@@ -3461,7 +3461,7 @@ mod scan_tests {
     /// 真实磁盘校验：新结构 _assets/skill/<包名>/skills/<技能>
     #[test]
     fn scan_real_assets_dir() {
-        let base = PathBuf::from("F:/重构ui/新alice助手/resources/_assets/skill");
+        let base = PathBuf::from("F:/重构ui/pojia-assistant/resources/_assets/skill");
         if !base.exists() {
             return; // 环境没有则跳过
         }
@@ -3485,7 +3485,7 @@ mod scan_tests {
     /// 旧结构兼容：_assets/<包名>/<技能>/（无 skills 中间层）
     #[test]
     fn scan_legacy_layout_still_works() {
-        let base = PathBuf::from("F:/重构ui/新alice助手/resources/_assets");
+        let base = PathBuf::from("F:/重构ui/pojia-assistant/resources/_assets");
         if !base.exists() {
             return;
         }

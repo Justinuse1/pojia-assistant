@@ -351,7 +351,7 @@ export function Session() {
   const stopRun = () => {
     if (!sel) return
     // 只停本会话的进程树 —— 不用 codexStop（那是全量清扫，会顺手杀掉
-    // Alice-codex 页启动的 CLI / 桌面端）
+    // POJIA-codex 页启动的 CLI / 桌面端）
     void be.agentStop(sel.name).then(() => {
       setRunning(false)
       setLiveSteps([])
@@ -413,7 +413,7 @@ export function Session() {
       <Topbar
         kicker="AGENT / Agent 助手"
         title="Agent 会话"
-        sub="独立提示词与单一技能 · 模型取自 Alice-codex 配置"
+        sub="独立提示词与单一技能 · 模型取自 POJIA-codex 配置"
         actions={
           <>
             <button className="btn" disabled={loading} onClick={() => void refresh()}>

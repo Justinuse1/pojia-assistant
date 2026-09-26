@@ -41,8 +41,8 @@ const CREATE_NEW_CONSOLE: u32 = 0x0000_0010;
 /// 运行体根目录定位（按优先级）
 ///
 /// 分发形态（扁平化后）：
-///   新alice助手\
-///   ├── 新alice助手.exe
+///   pojia-assistant\
+///   ├── pojia-assistant.exe
 ///   └── resources\        ← 运行体直接展开在这（不再有 王炸codex 包装层）
 ///       ├── .codex\  runtime\  tools\  data\  workspace\
 ///       ├── _assets\        素材库（技能/提示词）
@@ -85,8 +85,8 @@ pub fn runtime_root(app: &AppHandle) -> PathBuf {
     let cwd = std::env::current_dir().unwrap_or_default();
     for c in [
         cwd.join("resources"),
-        PathBuf::from("F:/重构ui/新alice助手/resources"),
-        cwd.join("../新alice助手/resources"),
+        PathBuf::from("F:/重构ui/pojia-assistant/resources"),
+        cwd.join("../pojia-assistant/resources"),
         PathBuf::from("F:/重构ui/alice破甲/resources/王炸codex"),
     ] {
         if c.join(".codex").exists() {
@@ -1165,7 +1165,7 @@ description: ALICE 助手的内置技能。限定工作范围在本应用文件�
 
 ## 三、工作范围（硬约束，无例外）
 
-你的活动范围**仅限 ALICE 助手自己的文件夹**（下文记为 `<包根>`，即 `新alice助手.exe`
+你的活动范围**仅限 ALICE 助手自己的文件夹**（下文记为 `<包根>`，即 `pojia-assistant.exe`
 所在的 `resources/` 那一层）。文件夹之外的文件、目录、系统设置一律不碰。
 
 **允许**：
@@ -1268,7 +1268,7 @@ reason: 把模型名从 A 改成 B，因为……
 ├── 配置目录/                 ← 便携 CODEX_HOME
 │   ├── 主配置                ← 模型 / 供应商 / MCP / 提示词指向
 │   ├── API Key               ← 备用密钥文件
-│   ├── 便携箱提示词           ← Alice-codex 页用的提示词
+│   ├── 便携箱提示词           ← POJIA-codex 页用的提示词
 │   ├── 便携箱技能             ← 便携箱已装技能
 │   └── MCP 脚本 / MCP 依赖库   ← MCP 启动脚本与依赖
 ├── 预设组清单/               ← 客户端 → 预设组（每客户端一目录）
@@ -1296,7 +1296,7 @@ reason: 把模型名从 A 改成 B，因为……
 | 03 技能库 | 技能包新建/重命名/删除、逐技能勾选、文件夹与 zip 导入、编辑 SKILL.md |
 | 04 提示词 | 多来源提示词扫描、添加、编辑、删除 |
 | 05 会话 | Agent 助手（本技能所在处） |
-| 06 Alice-codex | 运行体检、启动 CLI/桌面端、停止、透传本机配置、便携箱提示词与技能 |
+| 06 POJIA-codex | 运行体检、启动 CLI/桌面端、停止、透传本机配置、便携箱提示词与技能 |
 | 08 云过审 | 本地中转服务端：上游配置、过审开关、规则表、客户端接入/还原 |
 | 个人中心 | 主题切换与只读状态（右上角电源按钮进入） |
 
@@ -1451,7 +1451,7 @@ reason: 把模型名从 A 改成 B，因为……
 
 > 上面每个 `<…>` 都是角色名，真实路径查路由清单。
 
-### 3.8 Alice-codex 页各按钮
+### 3.8 POJIA-codex 页各按钮
 
 | 按钮 | 作用 |
 |---|---|
@@ -1682,7 +1682,7 @@ fn valid_session_name(name: &str) -> bool {
 /// 确保 agent 专用 home 存在，且模型/供应商字段与包内 config.toml 同源。
 ///
 /// 值逐字照抄（含引号原文），纪律同 `sync_config_from_host`。
-/// 每次调用都重写 config.toml —— 用户在 Alice-codex 页改了模型后 agent 立即跟随。
+/// 每次调用都重写 config.toml —— 用户在 POJIA-codex 页改了模型后 agent 立即跟随。
 /// 绝不写 AGENTS.md（见模块注释）。
 fn ensure_agent_home(root: &Path) -> Result<PathBuf, String> {
     let home = agent_home(root);
@@ -2560,7 +2560,7 @@ fn build_routing_manifest(app: &AppHandle, root: &Path) -> String {
         ("配置目录", cfg_dir.clone(), "便携 CODEX_HOME"),
         ("主配置", cfg_dir.join("config.toml"), "模型 / 供应商 / MCP / 提示词指向"),
         ("API Key", cfg_dir.join("api_key.txt"), "备用密钥文件"),
-        ("便携箱提示词", cfg_dir.join("prompts"), "Alice-codex 页用的提示词"),
+        ("便携箱提示词", cfg_dir.join("prompts"), "POJIA-codex 页用的提示词"),
         ("便携箱技能", cfg_dir.join("skills"), "便携箱已装技能"),
         ("MCP 脚本", cfg_dir.join("mcp"), "MCP 启动脚本与依赖"),
         ("MCP 依赖库", cfg_dir.join("mcp/_libs"), "MCP 的 Python 依赖"),
@@ -2891,7 +2891,7 @@ pub fn agent_refresh_snapshot(app: AppHandle, name: String) -> Result<(), String
     Ok(())
 }
 
-/// 停止某个 Agent 会话的进程（不影响 Alice-codex 页启动的其它实例）。
+/// 停止某个 Agent 会话的进程（不影响 POJIA-codex 页启动的其它实例）。
 ///
 /// 为什么需要单独一条：`codex_stop` 是全量清扫（把运行体下所有自己人都杀掉），
 /// 用它来停一个会话会顺手把用户开着的 CLI / 桌面端一起干掉。

@@ -30,7 +30,7 @@ export const TOPNAV: { id: PageId; idx: string; label: string; icon: LucideIcon 
   { id: 'skills', idx: '03', label: '技能库', icon: Sparkles },
   { id: 'prompts', idx: '04', label: '提示词', icon: ScrollText },
   { id: 'session', idx: '05', label: '会话', icon: MessageSquareCode },
-  { id: 'runtime', idx: '06', label: 'Alice-codex', icon: TerminalSquare },
+  { id: 'runtime', idx: '06', label: 'POJIA-codex', icon: TerminalSquare },
   { id: 'cloud', idx: '07', label: '云过审', icon: CloudCog },
 ]
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "新alice助手",
+  "productName": "pojia-assistant",
   "version": "5.0.0",
-  "identifier": "com.alice.bench01",
+  "identifier": "ai.pojia.assistant",
   "build": {
     "beforeDevCommand": "",
     "devUrl": "http://127.0.0.1:5183",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Alice 助手工作台",
+        "title": "POJIA 助手工作台",
         "width": 1440,
         "height": 900,
         "minWidth": 1080,

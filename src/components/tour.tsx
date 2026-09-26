@@ -228,7 +228,7 @@ function TourOverlay({
    * `step.anchor` —— 等于标记「本步已滚过」。于是下面 rAF 里的
    * `if (scrolledRef.current !== step.anchor)` 永远为假，`scrollIntoView`
    * **一次都没执行**。矮锚点看不出来（本来就在视口里），
-   * 但「Alice-codex」页的 `runtime.log` 高 590px、绝对 y=626，而视口只有
+   * 但「POJIA-codex」页的 `runtime.log` 高 590px、绝对 y=626，而视口只有
    * 900 —— 高亮孔中心落在 y=921 的屏幕外，elementFromPoint 取到 null，
    * 挖孔框整个悬在下方，看着就是「这一步没高亮」。
    * 现在改成：**真滚了才打标记**；锚点还没出现就留 null，让 rAF 接手。

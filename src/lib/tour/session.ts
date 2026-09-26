@@ -6,7 +6,7 @@ import { anchorOf, clickAnchor } from './index'
  *
  * ══ 主线 ══════════════════════════════════════════════════════════════
  * 一句话区别先说清（第 1 步）：这页是**工具内置**的 Agent 对话，独立提示词 +
- * 固定技能；顶栏 06「Alice-codex」是启动**外部** codex CLI / 桌面端。
+ * 固定技能；顶栏 06「POJIA-codex」是启动**外部** codex CLI / 桌面端。
  * 用户最容易把这两页混成一件事，所以开场就把它摁死，后面才好讲。
  *
  * 之后按真实操作顺序走：看历史列表 → 新建 → 选中一个 → 配置条（提示词 /
@@ -42,7 +42,7 @@ export const SESSION_TOUR: TourStep[] = [
     placement: 'bottom',
     title: '工具内置的 Agent 对话页',
     body:
-      '顶栏 05「会话」就是这里：工具自带的 Agent 对话，一个会话一套独立提示词，技能固定内置。旁边的 06「Alice-codex」是启动外部的 codex CLI / 桌面端，两页别混 —— 想在这聊就留在这。',
+      '顶栏 05「会话」就是这里：工具自带的 Agent 对话，一个会话一套独立提示词，技能固定内置。旁边的 06「POJIA-codex」是启动外部的 codex CLI / 桌面端，两页别混 —— 想在这聊就留在这。',
   },
   {
     anchor: 'session.list',
@@ -126,6 +126,6 @@ export const SESSION_TOUR: TourStep[] = [
   {
     title: '会话页主线记住这三步',
     body:
-      '选一个会话 → 需要就改提示词、点刷新快照 → 在输入框把活派出去。细节忘了随时点右上「使用教程」重看；真要跑外部 codex CLI，去「Alice-codex」页。',
+      '选一个会话 → 需要就改提示词、点刷新快照 → 在输入框把活派出去。细节忘了随时点右上「使用教程」重看；真要跑外部 codex CLI，去「POJIA-codex」页。',
   },
 ]

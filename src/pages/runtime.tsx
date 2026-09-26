@@ -24,7 +24,7 @@ import type { CodexPromptOptionDto, CodexSkillDto } from '@/lib/tauri'
 import type { LogLine, RuntimeCheckKey } from '@/types/domain'
 
 /**
- * Alice-codex（原「王炸codex」）
+ * POJIA-codex（原「王炸codex」）
  *
  * 这一页管的是**包内那一套便携运行体**：codex 运行时、桌面端、技能库、
  * 提示词库、MCP 依赖。所有路径都从包根推导，拷到别的机器照常可用。
@@ -181,7 +181,7 @@ export function Runtime() {
   }, [refreshCodex])
 
   useEffect(() => {
-    document.title = 'ALICE · Alice-codex'
+    document.title = 'ALICE · POJIA-codex'
   }, [])
 
   // 后端忙碌状态 = 本地 busy 或 store 的 probing
@@ -365,8 +365,8 @@ export function Runtime() {
   return (
     <div className="page anim-page">
       <Topbar
-        kicker="RUNTIME / Alice-codex"
-        title="Alice-codex 运行时"
+        kicker="RUNTIME / POJIA-codex"
+        title="POJIA-codex 运行时"
         sub="用随包分发的 codex 运行：CODEX_HOME、APPDATA、TEMP 全部重定向到包内目录，桌面端使用独立 profile，拷到别的电脑也能用。"
         actions={
           <>

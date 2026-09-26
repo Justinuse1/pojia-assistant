@@ -827,7 +827,7 @@ export const onAgentRunning = (cb: (session: string, pid: number) => void) =>
 export const onAgentStep = (cb: (session: string, step: string) => void) =>
   onEvent<[string, string]>('agent:step', ([session, step]) => cb(session, step))
 
-/** 停止某会话的进程（只杀这一个会话的树，不动 Alice-codex 页的实例） */
+/** 停止某会话的进程（只杀这一个会话的树，不动 POJIA-codex 页的实例） */
 export const agentStop = (name: string) => invoke<LaunchResultDto>('agent_stop', { name })
 
 /** 某会话是否在跑（切页回来恢复状态用） */

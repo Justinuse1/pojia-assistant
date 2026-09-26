@@ -2,7 +2,7 @@ import type { TourStep } from './types'
 import { anchorOf, clickAnchor } from './index'
 
 /**
- * 「Alice-codex」页新手教程。
+ * 「POJIA-codex」页新手教程。
  *
  * 主线：先讲清「这是什么页」（随包分发的 codex 运行时，跟「会话」页的内置
  * Agent 不是一回事）→ 学会用「一键自检」判断装没装对 → 看体检面板与包内

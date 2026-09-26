@@ -802,14 +802,14 @@ mod tests {
     #[test]
     fn path_under_matches_case_and_separator() {
         assert!(path_under(
-            "F:\\重构ui\\新alice助手\\resources\\runtime\\desktop\\app\\ChatGPT.exe",
-            "F:/重构ui/新alice助手/resources"
+            "F:\\重构ui\\pojia-assistant\\resources\\runtime\\desktop\\app\\ChatGPT.exe",
+            "F:/重构ui/pojia-assistant/resources"
         ));
         assert!(path_under("c:\\x\\resources", "C:\\X\\RESOURCES\\"));
         // 不能把同名前缀的兄弟目录吞进来（resources2 不是 resources 的子目录）
         assert!(!path_under("C:\\x\\resources2\\a.exe", "C:\\x\\resources"));
         // 主程序自己在 resources 之外，绝不能被顺手杀掉
-        assert!(!path_under("F:\\重构ui\\新alice助手\\新alice助手.exe", "F:\\重构ui\\新alice助手\\resources"));
+        assert!(!path_under("F:\\重构ui\\pojia-assistant\\pojia-assistant.exe", "F:\\重构ui\\pojia-assistant\\resources"));
         assert!(!path_under("C:\\x\\resources", ""));
     }
 
