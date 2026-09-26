@@ -1,6 +1,6 @@
 [package]
 name = "pojia-assistant-ui"
-version = "5.1.0"
+version = "5.2.0"
 description = "POJIA.AI 助手工作台 - Bench-01"
 edition = "2021"
 

@@ -1,7 +1,7 @@
 {
   "project": "POJIA.AI 客户端",
   "version": "5.1.0",
-  "updated": "2026-09-26T15:05:00+08:00",
+  "updated": "2026-09-26T16:40:00+08:00",
   "agents": [
     {
       "name": "port-agent",
@@ -67,6 +67,16 @@
     }
   ],
   "log": [
+    {
+      "time": "2026-09-26 16:40",
+      "who": "rel-agent",
+      "what": "v5.2部署接线完成: 规则文件入运行体+仓库模板, 实机云过审页验证通过"
+    },
+    {
+      "time": "2026-09-26 16:02",
+      "who": "test-agent",
+      "what": "v5.2素材接线cargo release构建通过(3m05s)"
+    },
     {
       "time": "2026-09-26 15:35",
       "who": "main",
