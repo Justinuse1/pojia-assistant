@@ -8,6 +8,7 @@ mod runtime;
 mod winproc;
 mod alias;
 mod import_skill;
+mod ammo;
 
 use tauri::Emitter;
 use tauri::Manager;
@@ -106,6 +107,12 @@ fn main() {
             runtime::read_host_config,
             runtime::read_bundled_config,
             runtime::sync_config_from_host,
+            // 弹药库 / 经验复用
+            ammo::ammo_list,
+            ammo::ammo_save,
+            ammo::ammo_use,
+            ammo::ammo_verify,
+            ammo::ammo_delete,
             // 提示词注入引擎
             inject::inject_status,
             inject::inject_install,

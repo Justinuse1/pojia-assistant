@@ -17,6 +17,7 @@ import { Session } from '@/pages/session'
 import { Messages } from '@/pages/messages'
 import { Runtime } from '@/pages/runtime'
 import { Cloud } from '@/pages/cloud'
+import { Ammo } from '@/pages/ammo'
 
 function Toasts() {
   const { toasts, dismiss } = useApp()
@@ -45,6 +46,7 @@ function Shell() {
       'messages',
       'runtime',
       'cloud',
+      'ammo',
     ]
     return known.includes(h) ? h : 'dashboard'
   }
@@ -105,6 +107,7 @@ function Shell() {
               {page === 'messages' && <Messages />}
               {page === 'runtime' && <Runtime />}
               {page === 'cloud' && <Cloud />}
+              {page === 'ammo' && <Ammo />}
             </ErrorBoundary>
           </main>
         </div>
