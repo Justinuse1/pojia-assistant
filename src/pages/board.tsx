@@ -24,8 +24,8 @@ export function BoardPage() {
 
   const load = async () => {
     try {
-      const raw = await invoke<string>('board_read')
-      setBoard(JSON.parse(raw))
+      const raw = await invoke<any>('board_read')
+      setBoard(typeof raw === 'string' ? JSON.parse(raw) : raw)
       setErr('')
     } catch (e) { setErr(String(e)) }
   }
